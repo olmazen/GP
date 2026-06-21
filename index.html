@@ -1,0 +1,1730 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Тренажёр ГП · особенная часть</title>
+<style>
+:root{
+  --bg:#14161b;
+  --panel:#1b1e25;
+  --panel-2:#232730;
+  --line:rgba(255,255,255,.08);
+  --line-2:rgba(255,255,255,.14);
+  --gold:#d4af52;
+  --gold-soft:rgba(212,175,82,.14);
+  --text:#e9e6dd;
+  --dim:#9b978c;
+  --faint:#6c685f;
+  --green:#4f9d6b;
+  --green-bg:rgba(79,157,107,.16);
+  --red:#d05d5d;
+  --red-bg:rgba(208,93,93,.16);
+  --surface:#f3efe6;       /* светлая карточка вопроса */
+  --surface-2:#eae4d6;
+  --ink:#2a2722;           /* текст на светлом */
+  --ink-dim:#6b6557;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --serif:"Iowan Old Style",Palatino,Georgia,serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  --r:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--sans);color:var(--text);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input{font-family:inherit}
+::selection{background:var(--gold);color:#1a1610}
+
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 90px}
+
+/* кнопки */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;font-weight:600;font-size:15px;padding:12px 20px;transition:.15s;border:1px solid transparent}
+.btn-primary{background:var(--gold);color:#211a08}
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-ghost{border-color:var(--line-2);color:var(--text)}
+.btn-ghost:hover{background:rgba(255,255,255,.05)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-sm{padding:8px 13px;font-size:13.5px}
+
+/* экраны */
+.screen{display:none}
+.screen.active{display:block;animation:fade .25s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ВХОД */
+.gate{min-height:100vh;display:grid;place-items:center;padding:32px 16px}
+.gate-card{max-width:440px;width:100%;text-align:center}
+.logo{width:64px;height:64px;margin:0 auto 18px;border-radius:16px;display:grid;place-items:center;background:var(--gold);color:#211a08;font-family:var(--serif);font-size:32px;font-weight:700}
+.gate h1{font-family:var(--serif);font-size:30px;margin:0 0 8px;line-height:1.1}
+.gate p.lead{color:var(--dim);font-size:14.5px;margin:0 auto 26px;max-width:380px;line-height:1.5}
+.fields{display:flex;gap:10px;margin-bottom:12px}
+.field{flex:1;text-align:left}
+.field label{display:block;font-size:12px;color:var(--faint);margin:0 0 5px 2px}
+.field input{width:100%;padding:13px 14px;border-radius:10px;background:var(--panel);border:1px solid var(--line-2);color:var(--text);font-size:16px}
+.field input:focus{outline:none;border-color:var(--gold)}
+.gate .small{font-size:12.5px;color:var(--faint);margin-top:14px}
+.returning{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}
+.returning h4{font-size:12px;color:var(--faint);font-weight:600;margin:0 0 10px;letter-spacing:.04em;text-transform:uppercase}
+.return-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.return-chip{display:flex;align-items:center;gap:8px;padding:7px 13px 7px 7px;border-radius:24px;background:var(--panel);border:1px solid var(--line);font-size:13px}
+.return-chip:hover{border-color:var(--gold)}
+.return-chip .av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#211a08;background:var(--gold)}
+
+/* ШАПКА */
+header.top{position:sticky;top:0;z-index:30;background:rgba(20,22,27,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:9px}
+.brand .m{width:30px;height:30px;border-radius:8px;background:var(--gold);color:#211a08;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:15px}
+.brand b{font-size:14.5px}
+.top nav{margin-left:auto;display:flex;gap:2px}
+.top nav button{padding:8px 11px;border-radius:8px;font-size:13px;color:var(--dim);font-weight:600}
+.top nav button:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.top nav button.on{color:var(--gold)}
+.userchip{display:flex;align-items:center;gap:8px;padding:5px 11px 5px 5px;border-radius:22px;background:var(--panel);border:1px solid var(--line)}
+.userchip:hover{border-color:var(--gold)}
+.userchip .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11px;color:#211a08;background:var(--gold)}
+.userchip .meta{line-height:1.05;text-align:left}
+.userchip .meta b{font-size:12.5px;display:block;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.userchip .meta span{font-size:11px;color:var(--gold);font-family:var(--mono)}
+
+/* блоки */
+.block{margin:26px 0 14px}
+.block h2{font-family:var(--serif);font-size:22px;margin:0 0 4px}
+.block p{color:var(--dim);font-size:13.5px;margin:0;line-height:1.5}
+
+/* баннер уровня */
+.lvl-banner{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.lvl-banner .row{display:flex;align-items:center;gap:14px}
+.lvl-seal{width:54px;height:54px;border-radius:14px;flex:0 0 auto;display:grid;place-items:center;font-size:26px;background:var(--gold-soft);border:1px solid rgba(212,175,82,.4)}
+.lvl-banner .info{flex:1;min-width:0}
+.lvl-banner .info .lab{font-size:12px;color:var(--faint);font-family:var(--mono)}
+.lvl-banner .info h3{font-family:var(--serif);font-size:20px;margin:1px 0 2px}
+.lvl-bar{height:8px;border-radius:6px;background:var(--bg);overflow:hidden;margin-top:9px}
+.lvl-bar .fill{height:100%;background:var(--gold);transition:width .5s}
+.lvl-next{font-size:12px;color:var(--dim);margin-top:6px}
+.unlock-note{margin-top:12px;font-size:12.5px;color:var(--dim);background:var(--gold-soft);border-radius:8px;padding:9px 12px;line-height:1.45}
+
+/* темы */
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+.topic-card{position:relative;text-align:left;padding:12px;border-radius:10px;background:var(--panel);border:1px solid var(--line);transition:.13s}
+.topic-card:hover{border-color:var(--line-2)}
+.topic-card.sel{border-color:var(--gold);background:var(--panel-2)}
+.topic-card .te{font-size:18px}
+.topic-card .tn{font-size:13px;font-weight:600;margin-top:4px;line-height:1.25}
+.topic-card .acc{position:absolute;top:9px;right:10px;font-size:10.5px;font-family:var(--mono);padding:2px 6px;border-radius:12px}
+.topic-card .ck{position:absolute;top:8px;right:8px;width:17px;height:17px;border-radius:50%;background:var(--gold);color:#211a08;display:none;place-items:center;font-size:11px;font-weight:800}
+.topic-card.sel .ck{display:grid}.topic-card.sel .acc{display:none}
+
+.len-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:9px 15px;border-radius:22px;background:var(--panel);border:1px solid var(--line);font-size:13.5px;font-weight:600}
+.chip:hover{border-color:var(--line-2)}
+.chip.sel{background:var(--gold);color:#211a08;border-color:transparent}
+
+.start-bar{position:sticky;bottom:12px;margin-top:22px;display:flex;gap:12px;align-items:center;padding:13px 15px;border-radius:var(--r);background:var(--panel-2);border:1px solid var(--line-2)}
+.start-bar .sum{font-size:13px;color:var(--dim);line-height:1.4}
+.start-bar .sum b{color:var(--text)}
+.start-bar .btn{margin-left:auto}
+
+/* ВОПРОС */
+.quiz-top{display:flex;align-items:center;gap:12px;margin:16px 0 14px}
+.ptrack{flex:1;height:7px;border-radius:6px;background:var(--panel-2);overflow:hidden}
+.pfill{height:100%;width:0;background:var(--gold);transition:width .4s}
+.qmeta{font-family:var(--mono);font-size:12px;color:var(--dim);white-space:nowrap}
+.score-pill{font-family:var(--mono);font-size:12.5px;padding:5px 10px;border-radius:16px;background:var(--panel-2);border:1px solid var(--line);color:var(--gold)}
+
+.qcard{background:var(--surface);color:var(--ink);border-radius:14px;padding:22px;border:1px solid rgba(0,0,0,.06)}
+.qtags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}
+.qtag{font-size:10.5px;font-family:var(--mono);letter-spacing:.04em;padding:3px 8px;border-radius:14px;font-weight:600}
+.qtag.topic{background:rgba(42,39,34,.08);color:var(--ink-dim)}
+.qtag.d-j{background:rgba(79,157,107,.16);color:#2c6243}
+.qtag.d-m{background:rgba(212,175,82,.2);color:#8a6a14}
+.qtag.d-x{background:rgba(208,93,93,.16);color:#9c3636}
+.qtag.type{background:rgba(42,39,34,.06);color:var(--ink-dim)}
+.qtext{font-family:var(--serif);font-size:19px;line-height:1.4;margin:0;color:#231f19}
+
+/* варианты */
+.opts{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;align-items:flex-start;gap:11px;text-align:left;padding:12px 14px;border-radius:10px;background:#fff;border:1.5px solid rgba(42,39,34,.15);font-size:14.5px;line-height:1.4;color:var(--ink);transition:.12s}
+.opt:hover:not(.lock){border-color:var(--gold)}
+.opt .mk{flex:0 0 auto;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:12px;background:rgba(42,39,34,.1);color:var(--ink-dim)}
+.opt.multi .mk{border-radius:50%}
+.opt.sel{border-color:var(--gold)}.opt.sel .mk{background:var(--gold);color:#211a08}
+.opt.lock{cursor:default}
+.opt.correct{border-color:var(--green);background:var(--green-bg)}.opt.correct .mk{background:var(--green);color:#fff}
+.opt.wrong{border-color:var(--red);background:var(--red-bg)}.opt.wrong .mk{background:var(--red);color:#fff}
+.opt.miss{border-style:dashed}
+
+.tf-row{display:flex;gap:10px;margin-top:16px}
+.tf-btn{flex:1;padding:16px;border-radius:11px;background:#fff;border:1.5px solid rgba(42,39,34,.15);font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink);transition:.12s}
+.tf-btn:hover:not(.lock){border-color:var(--gold)}
+.tf-btn .ic{font-size:21px;display:block;margin-bottom:3px}
+.tf-btn.sel{border-color:var(--gold)}
+.tf-btn.correct{border-color:var(--green);background:var(--green-bg)}
+.tf-btn.wrong{border-color:var(--red);background:var(--red-bg)}
+
+.input-wrap{margin-top:16px}
+.art-input{width:100%;padding:13px 15px;border-radius:10px;background:#fff;border:1.5px solid rgba(42,39,34,.2);font-size:16px;color:var(--ink);font-family:var(--mono)}
+.art-input:focus{outline:none;border-color:var(--gold)}
+.art-input.correct{border-color:var(--green);background:var(--green-bg)}
+.art-input.wrong{border-color:var(--red);background:var(--red-bg)}
+
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.match-col h4{font-size:11px;color:var(--ink-dim);margin:0 0 8px 2px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.match-item{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:9px;margin-bottom:8px;background:#fff;border:1.5px solid rgba(42,39,34,.15);font-size:13.5px;color:var(--ink);line-height:1.35;position:relative}
+.match-item:hover:not(.lock):not(.done){border-color:var(--gold)}
+.match-item.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(212,175,82,.3)}
+.match-item .badge{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;display:none;place-items:center;font-size:10.5px;font-weight:800;color:#fff;background:var(--gold)}
+.match-item.done .badge{display:grid;color:#211a08}
+.match-item.ok{border-color:var(--green);background:var(--green-bg)}.match-item.ok .badge{background:var(--green);color:#fff}
+.match-item.bad{border-color:var(--red);background:var(--red-bg)}.match-item.bad .badge{background:var(--red);color:#fff}
+.match-hint{grid-column:1/-1;font-size:11.5px;color:var(--ink-dim);font-style:italic;margin-top:2px}
+
+.order-list{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.order-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:9px;background:#fff;border:1.5px solid rgba(42,39,34,.15);font-size:14px;color:var(--ink);line-height:1.35}
+.order-item .num{flex:0 0 auto;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(42,39,34,.1);color:var(--ink-dim)}
+.order-item .ctrls{margin-left:auto;display:flex;gap:4px}
+.order-item .ctrls button{width:28px;height:28px;border-radius:7px;background:rgba(42,39,34,.08);color:var(--ink-dim);font-size:14px}
+.order-item .ctrls button:hover:not(:disabled){background:var(--gold);color:#211a08}
+.order-item .ctrls button:disabled{opacity:.3;cursor:default}
+.order-item.ok{border-color:var(--green);background:var(--green-bg)}.order-item.ok .num{background:var(--green);color:#fff}
+.order-item.bad{border-color:var(--red);background:var(--red-bg)}.order-item.bad .num{background:var(--red);color:#fff}
+
+/* подсказки */
+.hints{margin-top:16px;display:flex;gap:9px;flex-wrap:wrap}
+.hint-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:22px;font-size:12.5px;font-weight:600;background:rgba(42,39,34,.06);border:1px solid rgba(42,39,34,.18);color:var(--ink-dim)}
+.hint-btn:hover:not(:disabled){background:rgba(212,175,82,.16);border-color:var(--gold);color:#7a5f12}
+.hint-btn:disabled{opacity:.45;cursor:default}
+.hint-btn .cost{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:8px;background:var(--red-bg);color:#9c3636}
+.hint-out{margin-top:11px;border-radius:9px;padding:12px 14px;font-size:13px;line-height:1.5;display:none}
+.hint-out.show{display:block}
+.hint-out.lite{background:rgba(212,175,82,.12);border:1px dashed rgba(212,175,82,.5);color:#6e561a}
+.hint-out.full{background:rgba(208,93,93,.1);border:1px dashed rgba(208,93,93,.4);color:#8a2727}
+
+/* разбор */
+.verdict{margin-top:16px;border-radius:11px;overflow:hidden;display:none}
+.verdict.show{display:block}
+.verdict .head{display:flex;align-items:center;gap:11px;padding:13px 16px;font-family:var(--serif);font-size:16px;font-weight:600}
+.verdict.right .head{background:var(--green-bg);color:#235c3c}
+.verdict.wrong .head{background:var(--red-bg);color:#8a2727}
+.verdict .head .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:15px;flex:0 0 auto}
+.verdict.right .ic{background:var(--green)}.verdict.wrong .ic{background:var(--red)}
+.verdict .head .gain{margin-left:auto;font-family:var(--mono);font-size:14px}
+.verdict .body{padding:14px 16px;background:rgba(255,255,255,.45);color:#322c22;font-size:13.5px;line-height:1.6}
+.verdict .body .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);font-weight:700;margin:0 0 4px}
+.verdict .refs{margin-top:11px;display:flex;flex-wrap:wrap;gap:6px}
+.ref{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px;background:rgba(42,39,34,.08);color:#5a5142}
+.verdict em{color:#9c3636;font-style:italic}
+
+.q-actions{margin-top:16px;display:flex;gap:10px;align-items:center}
+.q-actions .skip{font-size:13px;color:var(--dim);font-weight:600;padding:8px}
+.q-actions .skip:hover{color:var(--text)}
+
+/* РЕЗУЛЬТАТ */
+.res-hero{text-align:center;padding:26px 16px 6px}
+.big-score{font-family:var(--serif);font-size:54px;line-height:1;margin:6px 0}
+.big-score.pos{color:var(--gold)}.big-score.neg{color:var(--red)}
+.big-score small{font-size:22px;color:var(--faint)}
+.res-verdict{font-family:var(--serif);font-size:21px;margin:10px 0 4px}
+.res-sub{color:var(--dim);font-size:14px;max-width:460px;margin:0 auto;line-height:1.5}
+.levelup{margin:18px auto 0;max-width:420px;background:var(--gold-soft);border:1px solid rgba(212,175,82,.5);border-radius:12px;padding:14px;font-size:14px}
+.levelup b{color:var(--gold)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px;text-align:center}
+.stat .v{font-family:var(--serif);font-size:23px}
+.stat .l{font-size:10.5px;color:var(--faint);text-transform:uppercase;margin-top:2px}
+.bars{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:4px 16px}
+.bar-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+.bar-row:last-child{border-bottom:none}
+.bar-row .name{font-size:13px;width:155px;flex:0 0 auto}
+.bar-row .track{flex:1;height:8px;border-radius:6px;background:var(--bg);overflow:hidden}
+.bar-row .fill{height:100%;border-radius:6px;transition:width .5s}
+.bar-row .pct{font-family:var(--mono);font-size:12px;width:42px;text-align:right;flex:0 0 auto}
+.weak{margin-top:18px;border-radius:12px;padding:16px;background:var(--panel);border:1px solid var(--line)}
+.weak.has{background:var(--red-bg);border-color:rgba(208,93,93,.4)}
+.weak h3{font-family:var(--serif);font-size:17px;margin:0 0 3px}
+.weak.has h3{color:var(--red)}
+.weak p{font-size:12.5px;color:var(--dim);margin:0 0 11px}
+.weak-list{display:flex;flex-direction:column;gap:8px}
+.weak-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(0,0,0,.18);font-size:13px}
+.weak-item .e{font-size:17px}.weak-item .nm{font-weight:600}.weak-item .why{color:var(--faint);font-size:11.5px}
+.weak-item .go{margin-left:auto;font-size:12px;color:var(--gold);font-weight:700;padding:6px 11px;border-radius:8px;border:1px solid rgba(212,175,82,.4)}
+.weak-item .go:hover{background:var(--gold-soft)}
+
+/* ЛИДЕРБОРД */
+.lb-note{font-size:12.5px;color:var(--faint);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin-bottom:14px;line-height:1.5}
+.lb-list{display:flex;flex-direction:column;gap:7px}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:11px;background:var(--panel);border:1px solid var(--line)}
+.lb-row.me{border-color:var(--gold);background:var(--panel-2)}
+.lb-row .rk{font-family:var(--serif);font-size:18px;width:30px;text-align:center;color:var(--faint);flex:0 0 auto}
+.lb-row .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#211a08;background:var(--gold);flex:0 0 auto}
+.lb-row .nm{flex:1;min-width:0}.lb-row .nm b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-row .nm span{font-size:11px;color:var(--faint)}
+.lb-row .rt{text-align:right;flex:0 0 auto;font-family:var(--mono)}
+.lb-row .rt b{font-size:17px;color:var(--gold)}.lb-row .rt span{display:block;font-size:10px;color:var(--faint)}
+
+/* ПРОГРЕСС */
+.empty{text-align:center;padding:44px 18px;color:var(--faint)}.empty .ic{font-size:34px;opacity:.6;margin-bottom:10px}
+.foot{text-align:center;margin-top:34px;font-size:11px;color:var(--faint);line-height:1.7}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(16px);z-index:60;opacity:0;background:var(--panel-2);border:1px solid var(--gold);color:var(--text);padding:11px 18px;border-radius:24px;font-size:13.5px;transition:.25s;pointer-events:none;font-weight:600}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:560px){
+  .fields{flex-direction:column}
+  .stats{grid-template-columns:1fr 1fr}
+  .match-grid{grid-template-columns:1fr}
+  .bar-row .name{width:120px}
+  .top nav button span{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ВХОД -->
+<section id="screen-gate" class="screen active">
+  <div class="gate"><div class="gate-card">
+    <div class="logo">§</div>
+    <h1>Тренажёр по ГП</h1>
+    <p class="lead">Особенная часть гражданского права. Один поток вопросов, сложность растёт вместе с твоим уровнем. За ошибки очки снимаются.</p>
+    <div class="fields">
+      <div class="field"><label>Имя</label><input id="in-first" placeholder="Артём" maxlength="24" autocomplete="given-name"></div>
+      <div class="field"><label>Фамилия</label><input id="in-last" placeholder="Цивилистов" maxlength="24" autocomplete="family-name"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" id="btn-enter">Начать</button>
+    <div class="small">Браузер запомнит тебя — в следующий раз войдёшь сразу.</div>
+    <div class="returning" id="returning" style="display:none">
+      <h4>Продолжить как</h4>
+      <div class="return-list" id="return-list"></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ШАПКА -->
+<header class="top" id="top" style="display:none">
+  <div class="top-in">
+    <button class="brand" id="brand-home"><span class="m">§</span><b>Тренажёр ГП</b></button>
+    <nav>
+      <button data-nav="setup" class="on">▶ <span>Играть</span></button>
+      <button data-nav="progress">📈 <span>Прогресс</span></button>
+      <button data-nav="leaderboard">🏆 <span>Рейтинг</span></button>
+    </nav>
+    <button class="userchip" id="userchip" title="Сменить игрока">
+      <span class="av" id="chip-av">А</span>
+      <span class="meta"><b id="chip-name">Имя</b><span id="chip-rating">0 ◆</span></span>
+    </button>
+  </div>
+</header>
+
+<div class="wrap" id="app" style="display:none">
+
+  <!-- НАСТРОЙКА -->
+  <section id="screen-setup" class="screen active">
+    <div class="block" style="margin-top:20px"><h2>Твой уровень</h2></div>
+    <div class="lvl-banner" id="lvl-banner"></div>
+
+    <div class="block"><h2>Темы</h2><p>Отметь институты или ничего не выбирай — будет микс по всему курсу. Цифра в углу — твоя точность.</p></div>
+    <div class="topic-grid" id="topic-grid"></div>
+
+    <div class="block" style="margin-bottom:10px"><h2 style="font-size:18px">Сколько вопросов</h2></div>
+    <div class="len-row" id="len-row"></div>
+
+    <div class="start-bar">
+      <div class="sum" id="setup-sum"></div>
+      <button class="btn btn-primary" id="btn-start">Начать</button>
+    </div>
+  </section>
+
+  <!-- ВОПРОС -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-top">
+      <button class="btn-sm btn-ghost" id="btn-quit">✕</button>
+      <div class="ptrack"><div class="pfill" id="prog"></div></div>
+      <div class="qmeta" id="qmeta">1 / 10</div>
+      <div class="score-pill" id="qscore">0 ◆</div>
+    </div>
+    <div id="q-host"></div>
+  </section>
+
+  <!-- РЕЗУЛЬТАТ -->
+  <section id="screen-result" class="screen"></section>
+
+  <!-- ПРОГРЕСС -->
+  <section id="screen-progress" class="screen"></section>
+
+  <!-- РЕЙТИНГ -->
+  <section id="screen-leaderboard" class="screen">
+    <div class="block" style="margin-top:20px"><h2>Рейтинг</h2><p>Кто сколько набрал.</p></div>
+    <div class="lb-note" id="lb-note"></div>
+    <div id="lb-host"><div class="empty"><div class="ic">🏆</div>Загружаю…</div></div>
+  </section>
+
+  <div class="foot">
+    Банк вопросов — по конспекту «ГП. Особенная часть» и нормам ГК РФ. Это тренажёр: перед экзаменом сверяйся с текстом кодекса.
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ★★★ Общий рейтинг (необязательно) — см. README.
+   Пусто = локальный режим. Заполни для «все видят всех».
+   SUPABASE_KEY — это publishable-ключ (sb_publishable_…), он публичный.
+   НИКОГДА не вставляй сюда secret-ключ (sb_secret_…)! */
+const SUPABASE_URL = "https://roocovpsfqqcfypldnee.supabase.co";
+const SUPABASE_KEY = "sb_publishable_xg-03T5OijB0n9J0goqUwA_QGiGeyYZ";
+
+/* === ХРАНИЛИЩЕ. Ключи стабильны между версиями — НЕ переименовывай. === */
+const Store = (() => {
+  const hasWS = typeof window!=='undefined' && window.storage && typeof window.storage.get==='function';
+  let hasLS=false; try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); hasLS=true; }catch(e){}
+  const mem={};
+  const supaOn = !!(SUPABASE_URL && SUPABASE_KEY);
+  async function get(key,sh=false){
+    if(hasWS){ try{ const r=await window.storage.get(key,sh); return r?r.value:null; }catch(e){} }
+    if(hasLS){ try{ const v=localStorage.getItem(key); return v===null?null:v; }catch(e){} }
+    return (key in mem)?mem[key]:null;
+  }
+  async function set(key,val,sh=false){
+    if(hasWS){ try{ await window.storage.set(key,val,sh); return true; }catch(e){} }
+    if(hasLS){ try{ localStorage.setItem(key,val); return true; }catch(e){} }
+    mem[key]=val; return true;
+  }
+  async function list(prefix='',sh=false){
+    if(hasWS){ try{ const r=await window.storage.list(prefix,sh); return r?r.keys:[]; }catch(e){} }
+    if(hasLS){ try{ return Object.keys(localStorage).filter(k=>k.startsWith(prefix)); }catch(e){} }
+    return Object.keys(mem).filter(k=>k.startsWith(prefix));
+  }
+  /* publishable-ключ нельзя слать в Authorization (он не JWT) — только в apikey.
+     Authorization шлюз Supabase подставит сам. Работает и со старым anon-ключом. */
+  const sb=(p,o={})=>fetch(SUPABASE_URL+'/rest/v1/'+p,{...o,headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json',...(o.headers||{})}});
+  async function lbPush(slug,obj){
+    if(supaOn){ try{ const r=await sb('players',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{slug,first:obj.first,last:obj.last,rating:obj.rating}])}); if(r.ok)return; }catch(e){} }
+    await set('lb:'+slug, JSON.stringify({first:obj.first,last:obj.last,rating:obj.rating,ts:Date.now()}), true);
+  }
+  async function lbTop(limit=50){
+    if(supaOn){ try{ const r=await sb('players?select=slug,first,last,rating&order=rating.desc&limit='+limit); if(r.ok)return await r.json(); }catch(e){} }
+    const keys=await list('lb:',true); const rows=[];
+    for(const k of keys){ const raw=await get(k,true); if(!raw)continue; try{ rows.push({slug:k.slice(3),...JSON.parse(raw)}); }catch(e){} }
+    rows.sort((a,b)=>b.rating-a.rating); return rows;
+  }
+  const mode = supaOn?'supabase':(hasWS?'cloud':'local');
+  return { get, set, list, lbPush, lbTop, mode };
+})();
+</script>
+<script>
+/* ============================================================
+   БАНК ВОПРОСОВ · ГП особенная часть
+   level: 'j' (стажёр) | 'm' (юрист) | 'x' (магистр)
+   type:  single | multi | tf | input | match | order | casus
+   ============================================================ */
+
+const TOPICS = [
+  {id:'kp',    e:'📦', n:'Купля-продажа'},
+  {id:'rozn',  e:'🛒', n:'Розница и ЗПП'},
+  {id:'nedv',  e:'🏛️', n:'Продажа недвиж. и предприятия'},
+  {id:'energ', e:'⚡', n:'Энергоснабжение'},
+  {id:'darenie',e:'🎁', n:'Мена и дарение'},
+  {id:'renta', e:'👵', n:'Рента и содержание'},
+  {id:'arenda',e:'🏠', n:'Аренда и наём'},
+  {id:'podryad',e:'🔨', n:'Подряд и услуги'},
+  {id:'perevozka',e:'🚚', n:'Перевозка и экспедиция'},
+  {id:'zaym',  e:'💰', n:'Заём, кредит, факторинг'},
+  {id:'bank',  e:'🏦', n:'Банк и расчёты'},
+  {id:'strah', e:'🛡️', n:'Хранение и страхование'},
+  {id:'posrednik',e:'🤝', n:'Посредники и товарищество'},
+  {id:'delikt',e:'⚠️', n:'Деликты (вред)'},
+  {id:'neob',  e:'♻️', n:'Неоснов. обогащение'},
+  {id:'is',    e:'💡', n:'Интеллект. собственность'},
+  {id:'nasled',e:'📜', n:'Наследование'},
+];
+
+const TYPE_LABEL = {single:'Один ответ',multi:'Неск. ответов',tf:'Верно/неверно',input:'Введите статью',match:'Сопоставление',order:'Порядок',casus:'Казус'};
+
+const QUESTIONS = [
+/* ============ КУПЛЯ-ПРОДАЖА ============ */
+{id:'kp1',t:'kp',l:'j',type:'single',
+ q:'Договор купли-продажи по своей природе является…',
+ opts:['Консенсуальным, возмездным, двусторонним','Реальным, безвозмездным, односторонним','Реальным, возмездным, односторонним','Консенсуальным, безвозмездным, двусторонним'],
+ correct:0,
+ ex:'ДКП считается заключённым с момента достижения соглашения по существенным условиям (консенсуальный), продавец получает цену (возмездный), обе стороны обязаны и одновременно являются кредиторами (двусторонний, синаллагматический).',
+ refs:['ст. 454 ГК'],h1:'Деньги в обмен на вещь, и обязанности у обеих сторон.',h2:'Заключён с момента соглашения, а не передачи вещи. Это исключает «реальный».'},
+{id:'kp2',t:'kp',l:'j',type:'input',
+ q:'Какая статья ГК даёт легальное определение договора купли-продажи?',
+ answers:['454'],
+ ex:'Понятие ДКП закреплено в ст. 454 ГК: продавец обязуется передать вещь в собственность, покупатель — принять и уплатить цену.',
+ refs:['ст. 454 ГК'],h1:'Это самое начало главы 30 ГК.',h2:'Номер на единицу меньше статьи о существенном условии (455).'},
+{id:'kp3',t:'kp',l:'m',type:'single',
+ q:'Что является единственным существенным условием обычного договора купли-продажи?',
+ opts:['Цена','Срок передачи','Предмет (наименование и количество товара)','Качество товара'],
+ correct:2,
+ ex:'Существенное условие ДКП — предмет; он согласован, когда договор позволяет определить наименование и количество товара (п. 3 ст. 455). Срок и цена восполнимы (ст. 314, 424).',
+ refs:['п. 3 ст. 455 ГК','ст. 314 ГК'],h1:'Срок при отсутствии восполняется ст. 314, цена — ст. 424.',h2:'Нужно знать «что» и «сколько».'},
+{id:'kp4',t:'kp',l:'m',type:'tf',
+ q:'Срок передачи товара является существенным условием договора купли-продажи.',
+ correct:false,
+ ex:'Срок существенным условием не является. При его отсутствии применяется ст. 314 (7 дней с момента предъявления требования). Иное — для договора «к строго определённому сроку» (п. 2 ст. 457).',
+ refs:['ст. 314 ГК','п. 2 ст. 457 ГК'],h1:'Вспомни про восполняющие нормы.',h2:'Без срока работает ст. 314 — значит срок не критичен.'},
+{id:'kp5',t:'kp',l:'m',type:'multi',
+ q:'Какие способы защиты доступны покупателю при СУЩЕСТВЕННОМ нарушении требований к качеству товара (ст. 475)?',
+ opts:['Отказ от договора и возврат уплаченной суммы','Замена товара ненадлежащего качества','Соразмерное уменьшение цены','Безвозмездное устранение недостатков'],
+ correct:[0,1],
+ ex:'При существенном нарушении (п. 2 ст. 475): отказ от договора с возвратом денег ИЛИ замена товара. Уменьшение цены и устранение недостатков — реакция на НЕсущественные недостатки (п. 1 ст. 475).',
+ refs:['ст. 475 ГК'],h1:'Существенное нарушение даёт «жёсткие» средства.',h2:'Уменьшение цены и устранение недостатков — для мелких дефектов.'},
+{id:'kp6',t:'kp',l:'x',type:'match',
+ q:'Соедини модель передачи вещи с её сутью. Римское наследие в действии.',
+ pairs:[
+   {l:'Brevi manu',r:'Вещь уже у покупателя (была в аренде), право переходит в момент соглашения'},
+   {l:'Constitutum possessorium',r:'Право перешло, но владение осталось у продавца («французская купля»)'},
+   {l:'Traditio',r:'Передача из рук в руки или символическая (ключ от велозамка)'},
+   {l:'Удержание собственности (491 ГК)',r:'Владение передано, но собственность — лишь после оплаты'},
+ ],
+ ex:'Brevi manu (п. 2 ст. 224) — «короткой рукой», вещь уже во владении приобретателя. Constitutum possessorium — отложенная передача владения. Traditio — классическая передача. Ст. 491 — обеспечительное удержание собственности до оплаты.',
+ refs:['п. 2 ст. 224 ГК','ст. 491 ГК'],h1:'«Короткая рука» — вещь уже у тебя.',h2:'Constitutum possessorium = у продавца остаётся владение, у покупателя — собственность.'},
+{id:'kp7',t:'kp',l:'x',type:'single',
+ q:'От ответственности за эвикцию (изъятие товара третьим лицом по основаниям до продажи) продавца можно освободить соглашением сторон?',
+ opts:['Да, стороны свободны в договоре','Нет, ограничить или устранить эту ответственность соглашением нельзя','Да, но только если покупатель — предприниматель','Только если эвикция произошла по вине покупателя'],
+ correct:1,
+ ex:'Соглашение об освобождении/ограничении ответственности продавца за эвикцию ничтожно (п. 2 ст. 461). Продавец освобождается лишь доказав, что покупатель знал или должен был знать об основаниях изъятия (п. 1 ст. 461).',
+ refs:['ст. 460–462 ГК'],h1:'Это императив, защищающий покупателя.',h2:'п. 2 ст. 461 прямо запрещает такое соглашение.'},
+{id:'kp8',t:'kp',l:'x',type:'casus',
+ q:'Продавец заключил ДКП вещи, которая ему ещё не принадлежит, но будет куплена у третьего лица. Как квалифицировать договор?',
+ opts:['Купля будущей вещи/будущего объекта — действительна','Ничтожна, нельзя продать чужое','Притворная сделка','Действительна только под отлагательным условием приобретения'],
+ correct:0,
+ ex:'П. 2 ст. 455 прямо допускает ДКП вещи, которой ещё нет или которая принадлежит третьему лицу (купля будущей вещи/объекта). Это отличается от продажи чужой вещи, где на момент распоряжения у продавца уже нет права.',
+ refs:['п. 2 ст. 455 ГК'],h1:'ГК прямо разрешает продавать то, что приобретёшь позже.',h2:'Ключ — момент распорядительной сделки: к нему право должно появиться.'},
+
+/* ============ РОЗНИЦА / ЗПП ============ */
+{id:'rz1',t:'rozn',l:'j',type:'single',
+ q:'Договор розничной купли-продажи является публичным договором. Что это означает?',
+ opts:['Продавец вправе выбирать покупателей','Продавец обязан продать товар каждому обратившемуся на равных условиях','Договор заключается только в письменной форме','Условия согласовываются индивидуально с каждым'],
+ correct:1,
+ ex:'Публичный договор (ст. 426) обязывает продавца, ведущего розничную торговлю, продать товар любому обратившемуся и не отдавать предпочтение одному перед другим.',
+ refs:['ст. 426 ГК','ст. 492 ГК'],h1:'«Публичный» = для всех на равных.',h2:'Отказать «просто так» нельзя — обязан заключить с каждым.'},
+{id:'rz2',t:'rozn',l:'m',type:'tf',
+ q:'Закон о защите прав потребителей применяется, даже когда покупатель приобретает товар для предпринимательской деятельности.',
+ correct:false,
+ ex:'ЗоЗПП защищает гражданина-потребителя, приобретающего товар для личных, семейных, домашних нужд, НЕ связанных с предпринимательством. Для бизнес-целей — общие нормы ГК.',
+ refs:['преамбула ЗоЗПП'],h1:'Потребитель — это про личные нужды.',h2:'Купил для перепродажи/бизнеса — ты уже не потребитель.'},
+{id:'rz3',t:'rozn',l:'m',type:'single',
+ q:'По общему правилу с какого момента считается заключённым договор розничной купли-продажи?',
+ opts:['С момента оплаты','С момента выдачи кассового или товарного чека либо иного подтверждающего документа','С момента устной договорённости','С момента доставки товара'],
+ correct:1,
+ ex:'Договор розничной КП считается заключённым в надлежащей форме с момента выдачи продавцом чека или иного документа, подтверждающего оплату (ст. 493). Отсутствие чека не лишает покупателя права ссылаться на свидетельские показания.',
+ refs:['ст. 493 ГК'],h1:'Подумай про чек.',h2:'Форма соблюдена в момент выдачи чека/документа об оплате.'},
+
+/* ============ НЕДВИЖИМОСТЬ / ПРЕДПРИЯТИЕ ============ */
+{id:'nd1',t:'nedv',l:'m',type:'multi',
+ q:'Какие условия являются существенными для договора продажи недвижимости?',
+ opts:['Предмет (данные, позволяющие определить недвижимость)','Цена','Срок передачи','Перечень лиц, сохраняющих право пользования (при продаже жилья)'],
+ correct:[0,1,3],
+ ex:'Для продажи недвижимости существенны: предмет (ст. 554), цена (ст. 555 — в отличие от обычной КП цена существенна!) и при продаже жилого помещения — перечень лиц, сохраняющих право пользования (ст. 558). Срок существенным не является.',
+ refs:['ст. 554, 555, 558 ГК'],h1:'Здесь, в отличие от обычной КП, цена существенна.',h2:'Не забудь про «жильцов» при продаже жилья (ст. 558).'},
+{id:'nd2',t:'nedv',l:'x',type:'tf',
+ q:'Переход права собственности на недвижимость подлежит государственной регистрации, а сам договор продажи недвижимости (кроме жилья) в общем случае госрегистрации не требует.',
+ correct:true,
+ ex:'Регистрируется переход права (ст. 551). Договор продажи нежилой недвижимости госрегистрации не подлежит; договор продажи жилых помещений и предприятия имеет свои особенности. Важно различать регистрацию сделки и регистрацию перехода права.',
+ refs:['ст. 551 ГК'],h1:'Различай регистрацию договора и регистрацию перехода права.',h2:'Регистрируется именно переход права (ст. 551).'},
+
+/* ============ ЭНЕРГОСНАБЖЕНИЕ ============ */
+{id:'en1',t:'energ',l:'m',type:'single',
+ q:'Договором энергоснабжения опосредуется передача энергии. К какому типу договоров он относится в российском праве?',
+ opts:['Это самостоятельный непоименованный договор','Это подвид договора купли-продажи','Это разновидность подряда','Это разновидность аренды сети'],
+ correct:1,
+ ex:'Российское право признаёт энергоснабжение подвидом ДКП (§ 6 гл. 30), а электроэнергию — особым товаром, хотя вещью она не является. Общие правила о КП применяются субсидиарно (п. 5 ст. 454).',
+ refs:['§ 6 гл. 30 ГК','п. 5 ст. 454 ГК'],h1:'Энергия — «особый товар».',h2:'Это специальный вид купли-продажи.'},
+{id:'en2',t:'energ',l:'x',type:'tf',
+ q:'Для абонента-гражданина, использующего энергию для бытового потребления, договор энергоснабжения считается реальным — заключённым с момента первого фактического подключения к сети.',
+ correct:true,
+ ex:'По общему правилу договор энергоснабжения консенсуальный, но для гражданина-бытового потребителя — реальный: заключён с момента первого фактического подключения в установленном порядке (п. 1 ст. 540).',
+ refs:['п. 1 ст. 540 ГК'],h1:'Для обычного человека всё проще — «подключился = заключил».',h2:'п. 1 ст. 540: момент первого фактического подключения.'},
+
+/* ============ МЕНА И ДАРЕНИЕ ============ */
+{id:'dr1',t:'darenie',l:'j',type:'single',
+ q:'Договор дарения по своей юридической природе…',
+ opts:['Возмездный и взаимный','Безвозмездный, односторонне обязывающий','Возмездный, односторонне обязывающий','Безвозмездный, но всегда реальный'],
+ correct:1,
+ ex:'Дарение безвозмездно и односторонне обязывающее (обязанность — только у дарителя при обещании дарения). Это двусторонняя сделка (нужно согласие одаряемого), но обязанности — у одной стороны. Может быть реальным или консенсуальным.',
+ refs:['ст. 572 ГК'],h1:'Никакого встречного предоставления.',h2:'Сделка двусторонняя (нужно согласие), но обязан только даритель.'},
+{id:'dr2',t:'darenie',l:'m',type:'input',
+ q:'До какой суммы (в рублях) допускается «обычный подарок», на который не распространяется ряд запретов дарения по ст. 575?',
+ answers:['3000','3 000','3000 рублей','три тысячи','3 тыс'],
+ ex:'Запрет дарения (ст. 575) не касается обычных подарков стоимостью не более 3 000 рублей — например, госслужащим, работникам соцорганизаций и т. п.',
+ refs:['ст. 575 ГК'],h1:'Сумма скромная, на уровне коробки конфет.',h2:'Три тысячи рублей.'},
+{id:'dr3',t:'darenie',l:'x',type:'single',
+ q:'Дело «Алмаз-Антей»: ВАС допустил исключение из запрета дарения между коммерческими организациями. Для какой ситуации?',
+ opts:['Для всех сделок между «дружественными» фирмами','Для передачи имущества между основным и дочерним обществами','Для благотворительных пожертвований','Для сделок на сумму до 3000 рублей'],
+ correct:1,
+ ex:'ВАС указал, что запрет дарения между коммерческими организациями не распространяется на передачу имущества между основным и дочерним обществами: цель запрета — защита участников ЮЛ-дарителя, а внутри группы этот интерес не нарушается.',
+ refs:['пп. 4 п. 1 ст. 575 ГК'],h1:'Речь о компаниях внутри одной группы.',h2:'Основное и дочернее общество — не «чужие» друг другу.'},
+{id:'dr4',t:'darenie',l:'x',type:'casus',
+ q:'Влад подарил Боре машину за 1 млн, но получил взамен «символический» рубль, а в договоре стороны прямо назвали это дарением. Как суд вероятнее всего квалифицирует сделку?',
+ opts:['Чистое дарение','Смешанное/притворное — встречное предоставление исключает дарение','Договор мены','Договор ренты'],
+ correct:1,
+ ex:'Квалифицирующий признак дарения — намерение одарить и ОТСУТСТВИЕ встречного предоставления (ст. 572). Наличие платы (пусть и символической) при намерении прикрыть возмездную сделку влечёт оценку как притворной либо иной возмездной сделки.',
+ refs:['ст. 572 ГК','ст. 170 ГК'],h1:'Есть ли встречное предоставление?',h2:'Возмездность несовместима с дарением — ищи притворность.'},
+
+/* ============ РЕНТА ============ */
+{id:'rn1',t:'renta',l:'j',type:'single',
+ q:'Какая характеристика отличает договор ренты от большинства других договоров?',
+ opts:['Безвозмездность','Алеаторность (рисковый характер)','Публичность','Реальность во всех случаях'],
+ correct:1,
+ ex:'Рента алеаторна: объём выплат заранее не определён (обязательство может длиться до смерти получателя). Одна сторона может получить больше, чем отдала, другая — меньше.',
+ refs:['ст. 583 ГК'],h1:'Это «договор-рулетка».',h2:'Никто не знает, сколько в итоге будет выплачено — это риск.'},
+{id:'rn2',t:'renta',l:'m',type:'tf',
+ q:'Договор ренты подлежит обязательному нотариальному удостоверению.',
+ correct:true,
+ ex:'Договор ренты подлежит обязательному нотариальному удостоверению (ст. 584), а если под выплату передаётся недвижимость — дополнительно госрегистрации. У получателя ренты на недвижимость возникает залог (ипотека) в силу закона.',
+ refs:['ст. 584 ГК','п. 1 ст. 587 ГК'],h1:'Нотариус здесь обязателен.',h2:'Да, и при недвижимости ещё госрегистрация + залог в силу закона.'},
+{id:'rn3',t:'renta',l:'m',type:'match',
+ q:'Сопоставь вид ренты с его признаком.',
+ pairs:[
+   {l:'Постоянная рента',r:'Бессрочна; получатели — граждане и НКО; права переходят по наследству'},
+   {l:'Пожизненная рента',r:'На срок жизни получателя; только гражданин; только денежная форма'},
+   {l:'Пожизненное содержание с иждивением',r:'Только недвижимость; содержание в натуре (жильё, уход, питание)'},
+ ],
+ ex:'Постоянная — бессрочна, получатели граждане и НКО, права передаваемы. Пожизненная — до смерти гражданина, выплата деньгами не ниже МРОТ. Содержание с иждивением — разновидность пожизненной, предмет только недвижимость, форма — содержание в натуре (не менее 2 МРОТ в месяц).',
+ refs:['ст. 589–605 ГК'],h1:'Ключ — кто получатель и в какой форме платят.',h2:'«С иждивением» = только недвижимость и натуральное содержание.'},
+{id:'rn4',t:'renta',l:'x',type:'tf',
+ q:'Условие договора постоянной ренты об отказе плательщика от права на выкуп ренты является ничтожным.',
+ correct:true,
+ ex:'Право плательщика выкупить постоянную ренту неотъемлемо: условие об отказе от него ничтожно (ст. 592). Договором можно лишь запретить выкуп на срок жизни получателя или на срок не более 30 лет.',
+ refs:['ст. 592 ГК'],h1:'Право на выкуп нельзя «отменить» договором.',h2:'Можно только отсрочить (на жизнь получателя или до 30 лет).'},
+{id:'rn5',t:'renta',l:'x',type:'single',
+ q:'Имущество передано под постоянную ренту БЕЗВОЗМЕЗДНО и случайно погибло. Что происходит с обязательством плательщика?',
+ opts:['Обязательство прекращается','Плательщик обязан продолжать выплачивать ренту','Плательщик вправе требовать прекращения или изменения условий','Риск делится поровну'],
+ correct:1,
+ ex:'При БЕЗВОЗМЕЗДНОЙ передаче риск случайной гибели несёт плательщик — он обязан платить ренту несмотря на гибель имущества (ст. 595). При передаче ЗА ПЛАТУ плательщик вправе требовать прекращения или изменения условий.',
+ refs:['ст. 595 ГК'],h1:'Получил «бесплатно» — несёшь риск сам.',h2:'Безвозмездно → плательщик продолжает платить; за плату → может требовать прекращения.'},
+
+/* ============ АРЕНДА И НАЁМ ============ */
+{id:'ar1',t:'arenda',l:'j',type:'single',
+ q:'Что передаётся арендатору по договору аренды?',
+ opts:['Право собственности на имущество','Временное владение и/или пользование имуществом за плату','Имущество в дар','Право требования к третьим лицам'],
+ correct:1,
+ ex:'По договору аренды арендодатель предоставляет имущество во временное владение и пользование (или только пользование) за плату (ст. 606). Плоды, продукция и доходы становятся собственностью арендатора.',
+ refs:['ст. 606 ГК'],h1:'Аренда ≠ продажа: имущество вернётся.',h2:'Временно, за плату, во владение/пользование.'},
+{id:'ar2',t:'arenda',l:'m',type:'single',
+ q:'Какие вещи могут быть предметом аренды?',
+ opts:['Любые вещи, включая потребляемые','Только недвижимость','Непотребляемые вещи, не теряющие натуральных свойств при использовании','Только индивидуально-определённые вещи в собственности арендодателя'],
+ correct:2,
+ ex:'В аренду передаются непотребляемые, индивидуально-определённые вещи, которые не теряют натуральных свойств в процессе использования (ст. 607). Потребляемые вещи (топливо, продукты) в аренду передать нельзя — это предмет займа.',
+ refs:['ст. 607 ГК'],h1:'Вещь должна «выжить» и вернуться.',h2:'Непотребляемые — то, что не исчезает при пользовании.'},
+{id:'ar3',t:'arenda',l:'x',type:'tf',
+ q:'Право аренды «следует за вещью»: при смене собственника арендованного имущества договор аренды сохраняет силу для нового собственника.',
+ correct:true,
+ ex:'Переход права собственности на сданное в аренду имущество не является основанием для изменения или расторжения договора (ст. 617) — проявление «вещного» элемента аренды. Арендатор защищается и как титульный владелец (ст. 305).',
+ refs:['ст. 617 ГК','ст. 305 ГК'],h1:'Купивший дом вместе с ним получает и арендатора.',h2:'ст. 617 — смена собственника не прекращает аренду.'},
+{id:'ar4',t:'arenda',l:'m',type:'tf',
+ q:'Договор аренды недвижимости подлежит государственной регистрации независимо от срока.',
+ correct:false,
+ ex:'Договор аренды недвижимости подлежит госрегистрации, только если он долгосрочный (заключён на год и более). Краткосрочная аренда (менее года) регистрации не требует.',
+ refs:['ст. 609, 651 ГК'],h1:'Дело в сроке.',h2:'Регистрируется только аренда от года и дольше.'},
+
+/* ============ ПОДРЯД И УСЛУГИ ============ */
+{id:'pd1',t:'podryad',l:'j',type:'single',
+ q:'Чем договор подряда принципиально отличается от договора возмездного оказания услуг?',
+ opts:['Подряд безвозмезден','В подряде важен овеществлённый результат, в услугах оплачивается деятельность как таковая','Услуги всегда реальны','В подряде нет заказчика'],
+ correct:1,
+ ex:'Подряд направлен на достижение и передачу овеществлённого результата (ст. 702), который можно отделить от исполнителя. В возмездных услугах оплачивается сама деятельность, результат неотделим от процесса (ст. 779).',
+ refs:['ст. 702 ГК','ст. 779 ГК'],h1:'«Сделай стол» vs «постриги меня».',h2:'Подряд — про результат-вещь; услуги — про сам процесс.'},
+{id:'pd2',t:'podryad',l:'m',type:'tf',
+ q:'По общему правилу риск случайной гибели результата работы до приёмки несёт подрядчик.',
+ correct:true,
+ ex:'Если иное не предусмотрено, риск случайной гибели результата работы до её приёмки заказчиком несёт подрядчик (ст. 705). Риск гибели материалов несёт предоставившая их сторона.',
+ refs:['ст. 705 ГК'],h1:'Кто делает — тот и рискует до сдачи.',h2:'До приёмки результат «на совести» подрядчика.'},
+{id:'pd3',t:'podryad',l:'x',type:'single',
+ q:'Заказчик в договоре возмездного оказания услуг вправе отказаться от исполнения договора. Какое последствие предусматривает ст. 782?',
+ opts:['Отказ невозможен без согласия исполнителя','Заказчик возмещает исполнителю фактически понесённые расходы','Заказчик платит полную цену договора','Заказчик возмещает упущенную выгоду исполнителя'],
+ correct:1,
+ ex:'Заказчик вправе односторонне отказаться, оплатив исполнителю фактически понесённые расходы (п. 1 ст. 782). Исполнитель вправе отказаться лишь при полном возмещении убытков заказчику (п. 2 ст. 782).',
+ refs:['ст. 782 ГК'],h1:'Заказчик платит не всё, а лишь реальные траты.',h2:'Фактически понесённые расходы — для заказчика; полные убытки — если отказывается исполнитель.'},
+
+/* ============ ПЕРЕВОЗКА ============ */
+{id:'pr1',t:'perevozka',l:'j',type:'single',
+ q:'Договор перевозки груза по общему правилу является…',
+ opts:['Консенсуальным','Реальным','Безвозмездным','Односторонним'],
+ correct:1,
+ ex:'Классический договор перевозки груза реален: «груз, который передали, тот и перевозим» (ст. 785). Он двусторонний и возмездный; может заключаться в пользу третьего лица (получателя).',
+ refs:['ст. 785 ГК'],h1:'Сначала вверяешь груз — потом договор.',h2:'Реальный: момент заключения — передача груза перевозчику.'},
+{id:'pr2',t:'perevozka',l:'x',type:'single',
+ q:'Консенсуальный договор морской (и воздушной) перевозки груза с предоставлением всего судна или его части называется…',
+ opts:['Коносамент','Чартер (договор фрахтования)','Накладная','Каботаж'],
+ correct:1,
+ ex:'Чартер (фрахтование) — консенсуальная конструкция, нередко рассматриваемая как разновидность аренды; предоставляется всё судно, его часть или помещения (п. 2 ст. 115 КТМ). Коносамент же — товарораспорядительный документ при реальной перевозке.',
+ refs:['ст. 787 ГК','ст. 115 КТМ'],h1:'Это про «арендовать целое судно».',h2:'Фрахтование = чартер.'},
+{id:'pr3',t:'perevozka',l:'m',type:'tf',
+ q:'Отсутствие или неправильность транспортной накладной автоматически влечёт незаключённость договора перевозки груза.',
+ correct:false,
+ ex:'Отсутствие/неправильность накладной не влечёт незаключённости или недействительности договора: отношения могут подтверждаться иными доказательствами (п. 20 ПП ВС РФ № 26).',
+ refs:['п. 2 ст. 785 ГК','ПП ВС РФ № 26'],h1:'Накладная — доказательство, а не «магическое» условие.',h2:'Можно доказать перевозку и без идеальной накладной.'},
+
+/* ============ ЗАЁМ, КРЕДИТ, ФАКТОРИНГ ============ */
+{id:'zm1',t:'zaym',l:'m',type:'tf',
+ q:'Если займодавцем выступает гражданин, договор займа является императивно реальным.',
+ correct:true,
+ ex:'Когда займодавец — гражданин, договор займа императивно реален: считается заключённым с момента передачи денег (абз. 2 п. 1 ст. 807). Если займодавец не гражданин, договор может быть и консенсуальным.',
+ refs:['ст. 807 ГК'],h1:'Для обычного человека — «дал деньги = заключил».',h2:'Гражданин-займодавец → только реальная модель.'},
+{id:'zm2',t:'zaym',l:'j',type:'single',
+ q:'Что обязан вернуть заёмщик по договору денежного займа?',
+ opts:['Ту же самую купюру','Такую же сумму денег','Любую вещь по выбору','Эквивалент в иностранной валюте'],
+ correct:1,
+ ex:'Предмет займа (деньги или родовые вещи) переходит в собственность заёмщика; вернуть нужно такую же сумму денег или равное количество вещей того же рода и качества (ст. 807).',
+ refs:['ст. 807 ГК'],h1:'Деньги переходят в собственность — вернуть надо «такие же».',h2:'Не ту же вещь, а равное количество рода и качества.'},
+{id:'zm3',t:'zaym',l:'m',type:'single',
+ q:'Кредитный договор, в отличие от договора займа, является…',
+ opts:['Реальным и безвозмездным','Консенсуальным, возмездным, со специальным субъектом (банк/КО) на стороне кредитора','Односторонним','Реальным с любым кредитором'],
+ correct:1,
+ ex:'Кредитный договор консенсуальный, двусторонне обязывающий, возмездный, со специальным субъектом — банком или иной кредитной организацией (ст. 819). Это «подвид» консенсуального денежного займа.',
+ refs:['ст. 819 ГК'],h1:'Кредит даёт банк, и обязанность выдать возникает сразу.',h2:'Консенсуальный + спецсубъект (банк/КО).'},
+{id:'zm4',t:'zaym',l:'x',type:'single',
+ q:'По договору факторинга (финансирования под уступку денежного требования) клиент…',
+ opts:['Передаёт вещь в залог банку','Уступает финансовому агенту денежное требование к должнику в обмен на финансирование','Получает кредит под проценты','Передаёт право управления имуществом'],
+ correct:1,
+ ex:'По договору факторинга клиент уступает (или обязуется уступить) финансовому агенту денежные требования к третьему лицу (должнику), а агент передаёт/обязуется передать денежные средства; возможны и иные услуги (учёт, инкассирование) (ст. 824).',
+ refs:['ст. 824 ГК'],h1:'Продаёшь «дебиторку» за живые деньги.',h2:'Уступка денежного требования финансовому агенту.'},
+
+/* ============ БАНК И РАСЧЁТЫ ============ */
+{id:'bk1',t:'bank',l:'m',type:'single',
+ q:'Договор банковского вклада, в котором вкладчик — гражданин, по своей природе…',
+ opts:['Консенсуальный и непубличный','Реальный, односторонне обязывающий и публичный','Реальный и безвозмездный','Консенсуальный и возмездный'],
+ correct:1,
+ ex:'Договор банковского вклада реален (заключён с момента внесения суммы), односторонне обязывающий (обязан банк) и возмездный; вклад гражданина — публичный договор (ст. 834).',
+ refs:['ст. 834 ГК'],h1:'Деньги внёс — договор есть; и банк не вправе отказать.',h2:'Реальный + публичный (для граждан).'},
+{id:'bk2',t:'bank',l:'x',type:'match',
+ q:'Сопоставь форму безналичных расчётов с её сутью.',
+ pairs:[
+   {l:'Аккредитив',r:'Банк обязуется по поручению плательщика произвести платёж получателю при представлении документов'},
+   {l:'Инкассо',r:'Банк по поручению получателя осуществляет действия по получению платежа от плательщика'},
+   {l:'Платёжное поручение',r:'Банк по распоряжению плательщика переводит сумму на счёт получателя'},
+   {l:'Чек',r:'Ценная бумага с распоряжением банку выплатить держателю указанную сумму'},
+ ],
+ ex:'Аккредитив (ст. 867) — платёж против документов. Инкассо (ст. 874) — банк действует по поручению получателя. Платёжное поручение (ст. 863) — плательщик распоряжается перевести. Чек (ст. 877) — ценная бумага-распоряжение.',
+ refs:['ст. 862–885 ГК'],h1:'Аккредитив — «деньги против документов».',h2:'Инкассо инициирует получатель, поручение — плательщик.'},
+
+/* ============ ХРАНЕНИЕ И СТРАХОВАНИЕ ============ */
+{id:'st1',t:'strah',l:'j',type:'single',
+ q:'По договору хранения хранитель обязан…',
+ opts:['Передать вещь в собственность поклажедателя','Хранить переданную вещь и возвратить её в сохранности','Пользоваться вещью и платить за это','Застраховать вещь'],
+ correct:1,
+ ex:'По договору хранения одна сторона (хранитель) обязуется хранить вещь, переданную поклажедателем, и возвратить её в сохранности (ст. 886). Пользоваться вещью хранитель по общему правилу не вправе.',
+ refs:['ст. 886 ГК'],h1:'Хранитель не собственник и не пользователь.',h2:'Сберечь и вернуть — вот его задача.'},
+{id:'st2',t:'strah',l:'m',type:'tf',
+ q:'Договор страхования является возмездным, даже если страховой случай так и не наступил.',
+ correct:true,
+ ex:'Страхование возмездно независимо от наступления страхового случая: страхователь платит премию «за спокойствие» и перенос риска. Договор алеаторный — стороны не знают, наступит ли событие.',
+ refs:['гл. 48 ГК'],h1:'Платишь за перенос риска, а не за «выплату».',h2:'Возмездность есть всегда — даже без страхового случая.'},
+{id:'st3',t:'strah',l:'x',type:'single',
+ q:'Цель договора страхования с точки зрения юридической природы — это прежде всего…',
+ opts:['Получение прибыли страхователем','Перенос риска наступления неблагоприятного события на страховщика','Кредитование страхователя','Сбережение средств под проценты'],
+ correct:1,
+ ex:'Юридическая природа страхования — перенос риска на страховщика, который выплатит возмещение при наступлении события. Глобально это договор оказания услуг; он двусторонне обязывающий, возмездный и алеаторный.',
+ refs:['гл. 48 ГК'],h1:'Суть — «переложить риск на чужие плечи».',h2:'Перенос риска на страховщика.'},
+
+/* ============ ПОСРЕДНИКИ И ТОВАРИЩЕСТВО ============ */
+{id:'ps1',t:'posrednik',l:'m',type:'match',
+ q:'Сопоставь посреднический договор с тем, от чьего имени и за чей счёт действует посредник.',
+ pairs:[
+   {l:'Поручение',r:'От имени и за счёт доверителя (прямое представительство)'},
+   {l:'Комиссия',r:'От своего имени, но за счёт комитента'},
+   {l:'Агентирование',r:'От своего имени или от имени принципала, но за счёт принципала'},
+ ],
+ ex:'Поручение (ст. 971) — поверенный действует от имени доверителя. Комиссия (ст. 990) — комиссионер от своего имени за счёт комитента. Агентский договор (ст. 1005) — гибкая модель: возможны обе схемы, всегда за счёт принципала.',
+ refs:['ст. 971, 990, 1005 ГК'],h1:'Ключ — «чьё имя» в сделке.',h2:'Комиссионер — от своего имени; поверенный — от чужого.'},
+{id:'ps2',t:'posrednik',l:'x',type:'tf',
+ q:'По договору доверительного управления имуществом право собственности на переданное имущество переходит к доверительному управляющему.',
+ correct:false,
+ ex:'Передача имущества в доверительное управление НЕ влечёт перехода права собственности к управляющему (п. 1 ст. 1012). Управляющий действует от своего имени, указывая, что он управляющий (отметка «Д.У.»).',
+ refs:['ст. 1012 ГК'],h1:'Управляющий — не новый собственник.',h2:'Право остаётся у учредителя управления.'},
+{id:'ps3',t:'posrednik',l:'x',type:'single',
+ q:'По договору простого товарищества (о совместной деятельности) товарищи…',
+ opts:['Создают новое юридическое лицо','Соединяют вклады и совместно действуют без образования юрлица для общей цели','Передают имущество в доверительное управление','Уступают друг другу требования'],
+ correct:1,
+ ex:'По договору простого товарищества двое или несколько лиц соединяют вклады и совместно действуют без образования юридического лица для извлечения прибыли или иной не противоречащей закону цели (ст. 1041).',
+ refs:['ст. 1041 ГК'],h1:'«Скинулись и работаем вместе» — без новой фирмы.',h2:'Без образования юрлица.'},
+{id:'ps4',t:'posrednik',l:'x',type:'single',
+ q:'По договору коммерческой концессии правообладатель предоставляет пользователю…',
+ opts:['Имущество в аренду','Комплекс исключительных прав (товарный знак, ноу-хау и др.) для использования в предпринимательстве','Денежный заём','Право управления предприятием'],
+ correct:1,
+ ex:'По договору коммерческой концессии (франчайзинга) правообладатель предоставляет пользователю комплекс исключительных прав, включая право на товарный знак и другие объекты (ст. 1027). Договор подлежит регистрации в Роспатенте.',
+ refs:['ст. 1027 ГК'],h1:'Это юридическая основа франшизы.',h2:'Передаётся комплекс исключительных прав, а не вещь.'},
+
+/* ============ ДЕЛИКТЫ ============ */
+{id:'dl1',t:'delikt',l:'j',type:'multi',
+ q:'Какие условия (общий состав) необходимы для деликтной ответственности?',
+ opts:['Противоправность деяния','Вред','Причинно-следственная связь','Вина причинителя','Наличие договора между сторонами'],
+ correct:[0,1,2,3],
+ ex:'Общий состав деликта: противоправность (презюмируется), вред, причинно-следственная связь и вина (тоже презюмируется — отсутствие вины доказывает причинитель, п. 2 ст. 1064, п. 2 ст. 401). Договор не нужен — стороны могут быть незнакомы.',
+ refs:['ст. 1064 ГК','п. 2 ст. 401 ГК'],h1:'Договор для деликта не требуется.',h2:'Четыре элемента: противоправность, вред, ПСС, вина.'},
+{id:'dl2',t:'delikt',l:'m',type:'tf',
+ q:'И противоправность деяния, и вина причинителя вреда по общему правилу презюмируются.',
+ correct:true,
+ ex:'Противоправность презюмируется (доказывать не нужно), вина также презюмируется: отсутствие вины доказывает сам нарушитель (п. 2 ст. 401, п. 2 ст. 1064). Это облегчает положение потерпевшего.',
+ refs:['ст. 1064 ГК','ст. 401 ГК'],h1:'Бремя — на причинителе.',h2:'Да: и противоправность, и вина предполагаются.'},
+{id:'dl3',t:'delikt',l:'x',type:'match',
+ q:'Хардкор для магистра: сопоставь усложнённый вид причинно-следственной связи с примером.',
+ pairs:[
+   {l:'Альтернативная ПСС',r:'Двое пилили ветки, одна упала на прохожего — чья именно, неизвестно'},
+   {l:'Кумулятивная ПСС',r:'Каждого из действий по отдельности хватило бы для того же вреда'},
+   {l:'Вытесняющая ПСС',r:'Вред наступил бы и от первого действия, но его «перебило» второе'},
+   {l:'Прерывающаяся ПСС',r:'Сам потерпевший внёс вклад (отказался от помощи и погиб)'},
+ ],
+ ex:'Альтернативная — неизвестно, кто из нескольких причинил вред. Кумулятивная — действий каждого хватило бы самостоятельно. Вытесняющая — последующее действие вытесняет эффект первого. Прерывающаяся — вклад самого потерпевшего разрывает цепочку.',
+ refs:['ст. 1064 ГК'],h1:'«Неизвестно кто» — это альтернативная.',h2:'Кумулятивная = хватило бы и одного действия.'},
+{id:'dl4',t:'delikt',l:'m',type:'single',
+ q:'Кто несёт ответственность за вред, причинённый малолетним (до 14 лет)?',
+ opts:['Сам малолетний','Родители (усыновители, опекуны) или надзирающая организация, если не докажут отсутствие вины','Никто, вред не возмещается','Только государство'],
+ correct:1,
+ ex:'За вред малолетнего отвечают родители/опекуны или надзирающая организация, если не докажут, что вред возник не по их вине — т. е. не было попустительства и отсутствия надзора (ст. 1073, п. 16 ПП ВС № 1).',
+ refs:['ст. 1073 ГК'],h1:'Малыш сам не отвечает.',h2:'Отвечают родители/опекуны (если не докажут невиновность).'},
+{id:'dl5',t:'delikt',l:'x',type:'single',
+ q:'Несовершеннолетний 14–18 лет причинил вред. Как распределяется ответственность?',
+ opts:['Отвечают только родители','Несовершеннолетний отвечает сам; при недостатке средств — субсидиарно родители, если не докажут невиновность','Вред не возмещается','Ответственность всегда солидарная'],
+ correct:1,
+ ex:'Несовершеннолетние 14–18 лет несут самостоятельную ответственность; при отсутствии или недостатке средств субсидиарно отвечают родители, если не докажут отсутствие вины (ст. 1074). Их ответственность отпадает при достижении 18 лет или появлении средств.',
+ refs:['ст. 1074 ГК'],h1:'Подросток уже «взрослее» малолетнего.',h2:'Сам + субсидиарно родители.'},
+
+/* ============ НЕОСНОВАТЕЛЬНОЕ ОБОГАЩЕНИЕ ============ */
+{id:'no1',t:'neob',l:'j',type:'multi',
+ q:'Какие элементы образуют состав неосновательного обогащения (ст. 1102)?',
+ opts:['Обогащение одного лица','За счёт другого лица','Отсутствие правовых оснований','Наличие вины обогатившегося'],
+ correct:[0,1,2],
+ ex:'Состав НО: 1) обогащение (приобретение или сбережение имущества), 2) за счёт другого лица, 3) отсутствие правовых оснований. Вина и способ обогащения значения не имеют (п. 2 ст. 1102).',
+ refs:['ст. 1102 ГК'],h1:'Вина здесь не нужна.',h2:'Три элемента: обогащение, за чужой счёт, без основания.'},
+{id:'no2',t:'neob',l:'m',type:'single',
+ q:'В чём разница между двумя формами неосновательного обогащения — приобретением и сбережением?',
+ opts:['Приобретение — про деньги, сбережение — про вещи','Приобретение — поступление имущества; сбережение — отпадение расходов, которые лицо должно было понести','Это синонимы','Сбережение возможно только у юрлиц'],
+ correct:1,
+ ex:'Приобретение — имущество поступило к обогатившемуся (ошибочный перевод). Сбережение — лицо неправомерно освобождено от расходов, которые понесло бы (улучшение чужого имущества по ошибке, пользование чужим без оплаты).',
+ refs:['ст. 1102 ГК'],h1:'Одно — «прибавилось», другое — «не убавилось».',h2:'Сбережение = сэкономил то, что должен был потратить.'},
+{id:'no3',t:'neob',l:'x',type:'casus',
+ q:'Строители перепутали адрес и капитально отремонтировали не тот дом. Что определяет, обязан ли собственник возместить стоимость улучшений?',
+ opts:['Возмещает всегда и полностью','Возмещает, только если в улучшениях была хозяйственная необходимость / субъективная ценность для него','Никогда не возмещает','Возмещает половину'],
+ correct:1,
+ ex:'Затраты на чужое имущество возмещаются не всегда, а лишь когда в них была хозяйственная необходимость и субъективная ценность для собственника. «Нарисовал дракона на чужой машине» — необходимости нет; «заменил спущенное колесо» — есть.',
+ refs:['ст. 1102, 1105 ГК'],h1:'Нужно ли это было самому собственнику?',h2:'Критерий — хозяйственная необходимость и субъективная ценность.'},
+
+/* ============ ИНТЕЛЛЕКТУАЛЬНАЯ СОБСТВЕННОСТЬ ============ */
+{id:'is1',t:'is',l:'j',type:'tf',
+ q:'Автором изобретения, полезной модели или промышленного образца может быть только физическое лицо.',
+ correct:true,
+ ex:'Автором объекта патентных прав признаётся гражданин, творческим трудом которого создан результат (ст. 1347). Юрлицо автором быть не может, но может быть патентообладателем.',
+ refs:['ст. 1347 ГК'],h1:'Творить может только человек.',h2:'Автор — только физлицо; патентообладатель — может быть и юрлицо.'},
+{id:'is2',t:'is',l:'m',type:'single',
+ q:'Служебное изобретение создано работником. Кому по общему правилу принадлежит исключительное право и право на получение патента?',
+ opts:['Работнику-автору','Работодателю, если договором не предусмотрено иное','Государству','Совместно работнику и работодателю поровну'],
+ correct:1,
+ ex:'Право авторства — у работника, а исключительное право и право на получение патента — у работодателя, если договором не предусмотрено иное (ст. 1370). Если работодатель в течение 6 месяцев не подал заявку/не передал право/не засекретил — право возвращается работнику.',
+ refs:['ст. 1370 ГК'],h1:'«Служебное» намекает, в чью пользу.',h2:'Исключительное право — у работодателя (по умолчанию).'},
+{id:'is3',t:'is',l:'x',type:'single',
+ q:'Сколько действует исключительное право на произведение по общему правилу (авторское право)?',
+ opts:['10 лет с создания','В течение жизни автора и 70 лет после его смерти','Бессрочно','20 лет с даты публикации'],
+ correct:1,
+ ex:'Исключительное право на произведение действует в течение всей жизни автора и 70 лет, считая с 1 января года, следующего за годом смерти автора (ст. 1281). Право авторства и имя охраняются бессрочно.',
+ refs:['ст. 1281 ГК'],h1:'Жизнь автора плюс изрядный «хвост».',h2:'Жизнь + 70 лет.'},
+
+/* ============ НАСЛЕДОВАНИЕ ============ */
+{id:'ns1',t:'nasled',l:'j',type:'single',
+ q:'Наследование — это переход имущества умершего в порядке…',
+ opts:['Сингулярного правопреемства','Универсального правопреемства — как единое целое, в один момент','Дарения','Реституции'],
+ correct:1,
+ ex:'Наследство переходит в порядке универсального правопреемства: в неизменном виде, как единое целое и в один и тот же момент (ст. 1110). Нельзя принять одни права и отказаться от других.',
+ refs:['ст. 1110 ГК'],h1:'Всё и сразу, а не по кусочкам.',h2:'Универсальное правопреемство.'},
+{id:'ns2',t:'nasled',l:'m',type:'single',
+ q:'Кто относится к наследникам ПЕРВОЙ очереди по закону?',
+ opts:['Братья, сёстры, дедушки, бабушки','Дети, супруг и родители наследодателя','Дяди и тёти','Только дети'],
+ correct:1,
+ ex:'Наследники первой очереди — дети, супруг и родители наследодателя (ст. 1142). Внуки и их потомки наследуют по праву представления. Братья/сёстры и дедушки/бабушки — вторая очередь.',
+ refs:['ст. 1142 ГК'],h1:'Самые близкие: «вертикаль» + супруг.',h2:'Дети, супруг, родители.'},
+{id:'ns3',t:'nasled',l:'m',type:'order',
+ q:'Расположи наследников по очередям — от ПЕРВОЙ к более дальним.',
+ items:['Дети, супруг, родители','Полнородные/неполнородные братья и сёстры, дедушки и бабушки','Полнородные и неполнородные братья и сёстры родителей (дяди и тёти)','Прадедушки и прабабушки'],
+ ex:'1-я очередь — дети, супруг, родители (ст. 1142). 2-я — братья/сёстры, дедушки/бабушки (ст. 1143). 3-я — дяди и тёти (ст. 1144). 4-я — прадедушки и прабабушки (ст. 1145). Действующий ГК знает 8 очередей.',
+ refs:['ст. 1142–1145 ГК'],h1:'От самых близких к более дальним родственникам.',h2:'Братья/сёстры — раньше дядей/тёть.'},
+{id:'ns4',t:'nasled',l:'x',type:'single',
+ q:'Размер обязательной доли необходимого наследника составляет…',
+ opts:['Полную долю по закону','Не менее половины доли, которая причиталась бы при наследовании по закону','Одну треть наследства','Фиксированную сумму в МРОТ'],
+ correct:1,
+ ex:'Обязательная доля — не менее половины того, что причиталось бы необходимому наследнику при наследовании по закону (п. 1 ст. 1149). Необходимые наследники: несовершеннолетние/нетрудоспособные дети, нетрудоспособные супруг, родители, иждивенцы.',
+ refs:['ст. 1149 ГК'],h1:'Это «защитная» половина.',h2:'Половина от законной доли.'},
+{id:'ns5',t:'nasled',l:'x',type:'tf',
+ q:'Право представления допускается как при наследовании по закону, так и при наследовании по завещанию.',
+ correct:false,
+ ex:'Право представления (когда потомки наследуют долю умершего ранее наследника) действует ТОЛЬКО при наследовании по закону (ст. 1146). При завещании оно не применяется.',
+ refs:['ст. 1146 ГК'],h1:'Завещание — про волю, а не про «замену».',h2:'Право представления — только по закону.'},
+{id:'ns6',t:'nasled',l:'x',type:'casus',
+ q:'Супруги погибли в одной автокатастрофе с разницей в несколько часов (коммориенты). Наследуют ли они друг после друга?',
+ opts:['Да, позже умерший наследует за ранее умершим','Нет — умершие в один день считаются умершими одновременно и не наследуют друг после друга','Да, если это доказано посекундно','Наследует только переживший супруг'],
+ correct:1,
+ ex:'Коммориенты — граждане, умершие в один день, — в целях наследования считаются умершими одновременно и не наследуют друг после друга; к наследованию призываются наследники каждого из них (п. 2 ст. 1114).',
+ refs:['п. 2 ст. 1114 ГК'],h1:'«В один день» = «одновременно» для наследования.',h2:'Друг после друга не наследуют.'},
+{id:'ns7',t:'nasled',l:'m',type:'input',
+ q:'В течение скольких месяцев со дня открытия наследства его нужно принять (общий срок)? Введите число.',
+ answers:['6','шесть','6 месяцев'],
+ ex:'Общий срок принятия наследства — 6 месяцев со дня открытия наследства (ст. 1154). Пропущенный срок можно восстановить судом при уважительных причинах.',
+ refs:['ст. 1154 ГК'],h1:'Полгода.',h2:'Шесть месяцев.'},
+{id:'ns8',t:'nasled',l:'x',type:'single',
+ q:'Имущество умершего признаётся выморочным и в общем случае (кроме жилья и др.) переходит в собственность…',
+ opts:['Ближайших соседей','Российской Федерации','Нотариуса','Кредиторов наследодателя'],
+ correct:1,
+ ex:'Выморочное имущество переходит в собственность РФ (п. 2 ст. 1151). Исключение — жилое помещение, земельные участки и др., которые переходят муниципалитету или субъекту РФ (городу федерального значения).',
+ refs:['ст. 1151 ГК'],h1:'Если наследников нет вовсе — кому достаётся?',h2:'По общему правилу — Российской Федерации.'},
+
+/* ===================== ВТОРОЙ БАТЧ ===================== */
+
+/* --- купля-продажа --- */
+{id:'kp9',t:'kp',l:'j',type:'single',
+ q:'Магистральная (главная) обязанность продавца по ст. 456 ГК — это…',
+ opts:['Застраховать товар','Передать товар покупателю','Хранить товар год','Прорекламировать товар'],
+ correct:1,
+ ex:'Главная обязанность продавца — передать товар (ст. 456). Передача влечёт переход собственности и, по общему правилу, переход риска случайной гибели (п. 1 ст. 459).',
+ refs:['ст. 456 ГК'],h1:'Что вообще делает продавец?',h2:'Передаёт товар покупателю.'},
+{id:'kp10',t:'kp',l:'j',type:'tf',
+ q:'По договору купли-продажи покупатель обязан не только уплатить цену, но и принять товар.',
+ correct:true,
+ ex:'Покупатель обязан принять товар и оплатить его (ст. 484, 486), а также известить продавца о ненадлежащем исполнении (ст. 483).',
+ refs:['ст. 484, 486 ГК'],h1:'Обязанностей у покупателя больше одной.',h2:'Принять и оплатить — обе обязательны.'},
+{id:'kp11',t:'kp',l:'x',type:'tf',
+ q:'Действительность ДКП «чужой вещи» в российском праве зависит от признания принципа разделения обязательственной и распорядительной сделок.',
+ correct:true,
+ ex:'При отсутствии у продавца права собственности ничтожна распорядительная сделка, а обязательственная действительна: наступают последствия защиты от эвикции (ст. 460) и возможность иска покупателя к продавцу за непередачу собственности.',
+ refs:['ст. 455, 460 ГК'],h1:'Речь о делении сделки на «обязать» и «распорядиться».',h2:'Обязательственная сделка остаётся действительной, ничтожна лишь распорядительная.'},
+{id:'kp12',t:'kp',l:'m',type:'single',
+ q:'В модели отгрузки (отправки) обязанность продавца считается исполненной, а риск перешедшим в момент…',
+ opts:['Заключения договора','Сдачи товара перевозчику','Вручения товара покупателю','Оплаты товара'],
+ correct:1,
+ ex:'В модели отгрузки (п. 2 ст. 458, п. 1 ст. 509) обязанность исполнена, а риск перешёл в момент сдачи товара первому перевозчику, если договор не предусматривает доставку или самовывоз. Модель диспозитивна.',
+ refs:['п. 2 ст. 458 ГК'],h1:'Передал в руки курьеру/перевозчику — и всё.',h2:'Момент сдачи перевозчику.'},
+
+/* --- розница --- */
+{id:'rz4',t:'rozn',l:'j',type:'tf',
+ q:'Договор розничной купли-продажи может быть заключён в устной форме.',
+ correct:true,
+ ex:'Розничная КП — публичный договор, обычно заключается устно (например, покупка в магазине), форма считается соблюдённой с момента выдачи чека (ст. 493). Письменная форма не обязательна.',
+ refs:['ст. 493 ГК'],h1:'Ты же не подписываешь договор в супермаркете.',h2:'Да, устно — это нормально для розницы.'},
+
+/* --- недвижимость --- */
+{id:'nd3',t:'nedv',l:'m',type:'single',
+ q:'В какой форме заключается договор продажи недвижимости?',
+ opts:['Устно','Письменно, путём составления одного документа, подписанного сторонами','Только нотариально','В любой форме'],
+ correct:1,
+ ex:'Договор продажи недвижимости заключается в письменной форме путём составления одного документа, подписанного сторонами (ст. 550). Несоблюдение формы влечёт недействительность.',
+ refs:['ст. 550 ГК'],h1:'Это не «по рукам ударили».',h2:'Один документ, подписанный обеими сторонами.'},
+{id:'nd4',t:'nedv',l:'x',type:'single',
+ q:'Договор продажи предприятия как имущественного комплекса. Что входит в его состав по общему правилу?',
+ opts:['Только здания и оборудование','Всё имущество, права требования, долги, права на обозначения (фирменное наименование, товарный знак) и др.','Только долги','Только земельный участок'],
+ correct:1,
+ ex:'Предприятие как имущественный комплекс включает все виды имущества, предназначенные для деятельности: земельные участки, здания, оборудование, сырьё, права требования, долги, а также права на обозначения, если иное не предусмотрено (ст. 559, 132).',
+ refs:['ст. 132, 559 ГК'],h1:'Предприятие — это «бизнес целиком».',h2:'И активы, и долги, и права на обозначения.'},
+
+/* --- мена и дарение --- */
+{id:'dr5',t:'darenie',l:'j',type:'single',
+ q:'По договору мены каждая из сторон…',
+ opts:['Дарит вещь другой','Обязуется передать вещь в обмен на другую вещь','Передаёт деньги','Сдаёт вещь в аренду'],
+ correct:1,
+ ex:'По договору мены каждая сторона обязуется передать в собственность другой один товар в обмен на другой (ст. 567). К мене применяются правила о купле-продаже: каждый — и продавец, и покупатель своего товара.',
+ refs:['ст. 567 ГК'],h1:'«Баш на баш», но юридически.',h2:'Вещь меняется на вещь, а не на деньги.'},
+{id:'dr6',t:'darenie',l:'m',type:'single',
+ q:'Юридическое лицо владеет вещью на праве хозяйственного ведения. Может ли оно подарить эту вещь?',
+ opts:['Да, свободно','Только с согласия собственника','Нет, ни при каких условиях','Только другому юрлицу'],
+ correct:1,
+ ex:'Это ограничение дарения (ст. 576): юрлицо, которому вещь принадлежит на праве хозяйственного ведения или оперативного управления, вправе подарить её только с согласия собственника (кроме обычных подарков небольшой стоимости).',
+ refs:['ст. 576 ГК'],h1:'Вещь-то по сути не «своя».',h2:'Нужно согласие собственника.'},
+{id:'dr7',t:'darenie',l:'m',type:'tf',
+ q:'Доверенность на дарение, в которой не назван одаряемый и не указан предмет дарения, ничтожна.',
+ correct:true,
+ ex:'Такая «бланковая» доверенность на дарение ничтожна (абз. 5 п. 5 ст. 576): нельзя уполномочить «дарить что-то кому-то». Это защищает от злоупотреблений.',
+ refs:['п. 5 ст. 576 ГК'],h1:'«Подари кому-нибудь что-нибудь» — звучит подозрительно.',h2:'Да, ничтожна: нужны и одаряемый, и предмет.'},
+
+/* --- рента --- */
+{id:'rn6',t:'renta',l:'j',type:'single',
+ q:'Кто НЕ может быть получателем постоянной ренты?',
+ opts:['Гражданин','Некоммерческая организация','Коммерческая организация','Несколько граждан совместно'],
+ correct:2,
+ ex:'Получателями постоянной ренты могут быть граждане и некоммерческие организации (если это соответствует их целям). Коммерческие организации получателями ренты быть не могут — статус предпринимателя несовместим с положением «рантье».',
+ refs:['ст. 589 ГК'],h1:'Рантье и предприниматель — разные роли.',h2:'Коммерческая организация исключена.'},
+{id:'rn7',t:'renta',l:'x',type:'single',
+ q:'В договоре пожизненного содержания с иждивением плательщик стал плохо обращаться с получателем. Как это квалифицируется?',
+ opts:['Малозначительное нарушение','Существенное нарушение договора (лично-доверительный характер)','Не влияет на договор','Основание для повышения ренты'],
+ correct:1,
+ ex:'Отношения содержания с иждивением носят лично-доверительный характер; плохое обращение плательщика признаётся существенным нарушением, дающим получателю право требовать возврата недвижимости или выкупа ренты (ст. 605).',
+ refs:['ст. 601, 605 ГК'],h1:'Здесь важны не только деньги, но и человеческое отношение.',h2:'Это существенное нарушение договора.'},
+
+/* --- аренда --- */
+{id:'ar5',t:'arenda',l:'j',type:'tf',
+ q:'Плоды, продукция и доходы, полученные арендатором в результате использования имущества, становятся его собственностью.',
+ correct:true,
+ ex:'По общему правилу плоды, продукция и доходы от арендованного имущества — собственность арендатора (ст. 606), если иное не предусмотрено законом или договором.',
+ refs:['ст. 606 ГК'],h1:'Кто пользуется — тот и снимает «урожай».',h2:'Да, это собственность арендатора.'},
+{id:'ar6',t:'arenda',l:'m',type:'match',
+ q:'Сопоставь обязанность по ремонту арендованного имущества со стороной, которая её несёт по общему правилу.',
+ pairs:[
+   {l:'Капитальный ремонт',r:'Арендодатель'},
+   {l:'Текущий ремонт и содержание',r:'Арендатор'},
+ ],
+ ex:'По общему правилу капитальный ремонт — обязанность арендодателя (п. 1 ст. 616), а поддержание имущества в исправном состоянии, текущий ремонт и расходы на содержание — арендатора (п. 2 ст. 616). Нормы диспозитивны.',
+ refs:['ст. 616 ГК'],h1:'«Большой» ремонт — на собственнике.',h2:'Капитальный — арендодатель, текущий — арендатор.'},
+{id:'ar7',t:'arenda',l:'m',type:'single',
+ q:'Может ли арендатор сдать имущество в субаренду?',
+ opts:['Да, всегда без ограничений','Только с согласия арендодателя','Нет, никогда','Только если предмет — недвижимость'],
+ correct:1,
+ ex:'Сдача в субаренду (поднаём), передача прав по договору и иные распоряжения допускаются только с согласия арендодателя, если иное не установлено законом (п. 2 ст. 615).',
+ refs:['ст. 615 ГК'],h1:'Имущество ведь не твоё.',h2:'Нужно согласие арендодателя.'},
+{id:'ar8',t:'arenda',l:'x',type:'single',
+ q:'По договору финансовой аренды (лизинга) арендодатель (лизингодатель) обязан…',
+ opts:['Произвести вещь самостоятельно','Приобрести у указанного арендатором продавца указанное имущество и предоставить его арендатору','Подарить вещь арендатору','Хранить вещь у себя'],
+ correct:1,
+ ex:'По лизингу арендодатель обязуется приобрести в собственность указанное арендатором имущество у определённого продавца и предоставить его арендатору за плату во временное владение и пользование (ст. 665). Обычно для предпринимательских целей.',
+ refs:['ст. 665 ГК'],h1:'Лизингодатель сначала покупает то, что выбрал арендатор.',h2:'Приобретает у указанного продавца и передаёт арендатору.'},
+{id:'ar9',t:'arenda',l:'x',type:'tf',
+ q:'По договору коммерческого найма жилого помещения наниматель приобретает право собственности на квартиру.',
+ correct:false,
+ ex:'Наём жилого помещения (гл. 35) даёт право владения и пользования за плату, но не собственности. Наниматель — не собственник; собственник — наймодатель.',
+ refs:['ст. 671 ГК'],h1:'Наём — это про пользование, а не про владение навсегда.',h2:'Собственность не переходит.'},
+
+/* --- подряд и услуги --- */
+{id:'pd4',t:'podryad',l:'j',type:'single',
+ q:'Кто по общему правилу выполняет работу по договору подряда и за чей счёт (материалы, способы)?',
+ opts:['Заказчик своими силами','Подрядчик своим иждивением — из своих материалов, своими силами и средствами','Третье лицо за счёт государства','Никто, это формальность'],
+ correct:1,
+ ex:'По общему правилу подрядчик выполняет работу своим иждивением — из своих материалов, своими силами и средствами (ст. 704), если иное не предусмотрено договором.',
+ refs:['ст. 704 ГК'],h1:'«Иждивение подрядчика» — ключевая фраза.',h2:'Подрядчик использует свои материалы и силы.'},
+{id:'pd5',t:'podryad',l:'m',type:'single',
+ q:'Подрядчик привлёк к исполнению субподрядчиков. Кем он выступает по отношению к заказчику?',
+ opts:['Агентом','Генеральным подрядчиком, отвечающим перед заказчиком за всё','Комиссионером','Поручителем субподрядчиков'],
+ correct:1,
+ ex:'Подрядчик, привлёкший субподрядчиков, становится генеральным подрядчиком и отвечает перед заказчиком за результаты их работы, а перед субподрядчиками — за неисполнение обязательств заказчиком (ст. 706).',
+ refs:['ст. 706 ГК'],h1:'Он — «главный» в цепочке.',h2:'Генподрядчик отвечает перед заказчиком за всех.'},
+
+/* --- перевозка --- */
+{id:'pr4',t:'perevozka',l:'j',type:'single',
+ q:'Коносамент — это…',
+ opts:['Вид транспортного средства','Товарораспорядительный документ, выдаваемый перевозчиком при морской перевозке','Договор страхования груза','Разрешение таможни'],
+ correct:1,
+ ex:'Коносамент — товарораспорядительная ценная бумага, выдаваемая перевозчиком отправителю после принятия груза при морской перевозке (ст. 142 КТМ). Подтверждает заключение договора и приём груза.',
+ refs:['ст. 142 КТМ'],h1:'Это «бумага на груз» на море.',h2:'Товарораспорядительный документ перевозчика.'},
+{id:'pr5',t:'perevozka',l:'m',type:'single',
+ q:'Как по общему правилу строится ответственность перевозчика за несохранность груза?',
+ opts:['Без вины, абсолютная','Перевозчик отвечает, если не докажет, что утрата/повреждение произошли не по его вине','Перевозчик не отвечает никогда','Отвечает только при умысле'],
+ correct:1,
+ ex:'Перевозчик отвечает за несохранность груза, если не докажет, что она произошла вследствие обстоятельств, которые он не мог предотвратить (ст. 796) — то есть вина презюмируется, но ответственность ограничена стоимостью утраченного.',
+ refs:['ст. 796 ГК'],h1:'Снова презумпция — на ком бремя?',h2:'Перевозчик доказывает отсутствие вины.'},
+{id:'pr6',t:'perevozka',l:'x',type:'single',
+ q:'По договору транспортной экспедиции экспедитор обязуется…',
+ opts:['Лично перевезти груз','За вознаграждение и за счёт клиента выполнить или организовать выполнение услуг, связанных с перевозкой','Застраховать клиента','Хранить груз бессрочно'],
+ correct:1,
+ ex:'По договору транспортной экспедиции экспедитор за вознаграждение и за счёт клиента выполняет или организует выполнение услуг, связанных с перевозкой груза (ст. 801): заключение договоров перевозки, оформление документов, отправка/получение и др.',
+ refs:['ст. 801 ГК'],h1:'Экспедитор — «организатор» логистики.',h2:'Он организует перевозку, а не обязательно везёт сам.'},
+
+/* --- заём, кредит, факторинг --- */
+{id:'zm5',t:'zaym',l:'j',type:'single',
+ q:'Что может быть предметом договора займа?',
+ opts:['Только наличные деньги','Деньги, вещи, определённые родовыми признаками, или ценные бумаги','Только недвижимость','Любые индивидуально-определённые вещи'],
+ correct:1,
+ ex:'Предмет займа — деньги, вещи, определённые родовыми признаками (заменимые), или ценные бумаги (ст. 807). Индивидуально-определённую вещь занять нельзя — её передают в аренду или ссуду.',
+ refs:['ст. 807 ГК'],h1:'Вернуть надо «такое же», значит вещи должны быть заменимыми.',h2:'Деньги, родовые вещи или ценные бумаги.'},
+{id:'zm6',t:'zaym',l:'m',type:'single',
+ q:'Заёмщик нарушил срок возврата очередной части займа, выданного в рассрочку. Какое право возникает у займодавца?',
+ opts:['Только взыскать неустойку','Потребовать досрочного возврата всей оставшейся суммы с процентами','Расторгнуть договор без последствий','Ничего, нужно ждать конца срока'],
+ correct:1,
+ ex:'При нарушении графика возврата займа, выданного в рассрочку, займодавец вправе потребовать досрочного возврата всей оставшейся суммы вместе с причитающимися процентами (п. 2 ст. 811).',
+ refs:['ст. 811 ГК'],h1:'Одна просрочка «обрушивает» рассрочку.',h2:'Можно требовать всю сумму досрочно.'},
+
+/* --- банк и расчёты --- */
+{id:'bk3',t:'bank',l:'j',type:'single',
+ q:'По договору банковского счёта банк обязуется…',
+ opts:['Хранить наличные клиента в сейфе','Принимать и зачислять денежные средства, выполнять распоряжения клиента о платежах и выдаче со счёта','Кредитовать клиента безвозмездно','Управлять имуществом клиента'],
+ correct:1,
+ ex:'По договору банковского счёта банк обязуется принимать и зачислять поступающие средства, выполнять распоряжения клиента о перечислении и выдаче сумм со счёта и проведении других операций (ст. 845).',
+ refs:['ст. 845 ГК'],h1:'Это про обслуживание счёта и платежей.',h2:'Принимать, зачислять и исполнять распоряжения клиента.'},
+{id:'bk4',t:'bank',l:'m',type:'tf',
+ q:'Банк вправе по своему усмотрению определять и контролировать направления использования денежных средств клиента на счёте.',
+ correct:false,
+ ex:'Банк не вправе определять и контролировать направления использования средств клиента и ограничивать его распоряжение средствами, кроме случаев, установленных законом или договором (п. 3 ст. 845). Деньги клиента — под его контролем.',
+ refs:['ст. 845 ГК'],h1:'Чьи это деньги на счёте?',h2:'Нет: банк не указывает клиенту, как тратить.'},
+{id:'bk5',t:'bank',l:'x',type:'order',
+ q:'Расположи действия по аккредитиву в логическом порядке (от первого к последнему).',
+ items:['Плательщик даёт банку-эмитенту поручение открыть аккредитив','Банк-эмитент открывает аккредитив и сообщает исполняющему банку','Получатель отгружает товар и представляет документы','Исполняющий банк проверяет документы и производит платёж'],
+ ex:'Аккредитив (ст. 867): плательщик поручает открыть аккредитив → банк-эмитент открывает и извещает исполняющий банк → получатель исполняет и подаёт документы → банк платит против надлежащих документов. Платёж — «против документов».',
+ refs:['ст. 867 ГК'],h1:'Всё начинается с поручения плательщика.',h2:'Платёж — в самом конце, против документов.'},
+
+/* --- хранение и страхование --- */
+{id:'st4',t:'strah',l:'j',type:'match',
+ q:'Сопоставь участника страхового отношения с его ролью.',
+ pairs:[
+   {l:'Страховщик',r:'Принимает риск и выплачивает возмещение при страховом случае'},
+   {l:'Страхователь',r:'Заключает договор и уплачивает страховую премию'},
+   {l:'Выгодоприобретатель',r:'Лицо, в пользу которого заключён договор и которое получает выплату'},
+ ],
+ ex:'Страховщик несёт риск и платит возмещение; страхователь платит премию; выгодоприобретатель — лицо, в чью пользу заключён договор (может совпадать со страхователем). Есть и застрахованное лицо.',
+ refs:['гл. 48 ГК'],h1:'Кто платит премию, а кто — возмещение?',h2:'Страхователь платит премию; страховщик — возмещение.'},
+{id:'st5',t:'strah',l:'x',type:'single',
+ q:'Суброгация в имущественном страховании — это…',
+ opts:['Возврат премии страхователю','Переход к страховщику права требования к лицу, ответственному за убытки, в пределах выплаченного возмещения','Двойное страхование','Отказ в выплате'],
+ correct:1,
+ ex:'При суброгации к страховщику, выплатившему возмещение, переходит в пределах выплаченной суммы право требования страхователя к лицу, ответственному за убытки (ст. 965). Это предотвращает неосновательное обогащение и сохраняет превенцию.',
+ refs:['ст. 965 ГК'],h1:'Страховщик «встаёт на место» пострадавшего против виновника.',h2:'Переход права требования к причинителю вреда.'},
+{id:'st6',t:'strah',l:'m',type:'single',
+ q:'Хранитель без согласия поклажедателя воспользовался переданной на хранение вещью. Правомерно ли это?',
+ opts:['Да, хранитель вправе пользоваться вещью','Нет, по общему правилу хранитель не вправе пользоваться вещью без согласия поклажедателя','Да, если вещь не портится','Только если хранение безвозмездное'],
+ correct:1,
+ ex:'Хранитель не вправе без согласия поклажедателя пользоваться переданной на хранение вещью, а равно предоставлять её в пользование третьим лицам, кроме случаев, когда это необходимо для обеспечения сохранности (ст. 892).',
+ refs:['ст. 892 ГК'],h1:'Задача хранителя — беречь, а не эксплуатировать.',h2:'Пользоваться без согласия нельзя.'},
+
+/* --- посредники и товарищество --- */
+{id:'ps5',t:'posrednik',l:'m',type:'single',
+ q:'Комиссионер совершил сделку на условиях более выгодных, чем указал комитент. Кому достаётся дополнительная выгода по общему правилу?',
+ opts:['Только комиссионеру','Делится между комитентом и комиссионером поровну, если иное не в договоре','Только комитенту','Государству'],
+ correct:1,
+ ex:'Дополнительная выгода при исполнении на более выгодных условиях делится между комитентом и комиссионером поровну, если иное не предусмотрено соглашением (ст. 992).',
+ refs:['ст. 992 ГК'],h1:'Выгода — общая заслуга.',h2:'По общему правилу — пополам.'},
+{id:'ps6',t:'posrednik',l:'x',type:'single',
+ q:'Действия в чужом интересе без поручения (negotiorum gestio) порождают обязанность заинтересованного лица возместить расходы, если действия совершались…',
+ opts:['Из любопытства','Исходя из очевидной выгоды или пользы и действительных намерений заинтересованного лица, с необходимой заботливостью','Вопреки воле лица','Только при наличии договора'],
+ correct:1,
+ ex:'Действия без поручения должны совершаться исходя из очевидной выгоды/пользы и действительных или вероятных намерений заинтересованного лица, с необходимой заботливостью (ст. 980). Тогда возникает обязанность возместить необходимые расходы (ст. 984).',
+ refs:['ст. 980, 984 ГК'],h1:'Спасать чужое надо «по-хозяйски» и в интересах хозяина.',h2:'Критерий — очевидная польза и намерения заинтересованного лица.'},
+
+/* --- деликты --- */
+{id:'dl6',t:'delikt',l:'j',type:'multi',
+ q:'Какие функции выполняет деликтное право?',
+ opts:['Компенсационная','Превентивная','Фискальная (наполнение бюджета)','Карательная как основная'],
+ correct:[0,1],
+ ex:'Две основные функции деликтного права: компенсационная (полное возмещение убытков потерпевшему) и превентивная (сделать совершение деликта менее выгодным, чем его несовершение).',
+ refs:['ст. 1064 ГК'],h1:'Возместить и предупредить.',h2:'Компенсация + превенция.'},
+{id:'dl7',t:'delikt',l:'m',type:'single',
+ q:'Кто отвечает за вред, причинённый источником повышенной опасности (например, автомобилем)?',
+ opts:['Только при наличии вины владельца','Владелец источника — независимо от вины (если не докажет непреодолимую силу или умысел потерпевшего)','Никто','Только пешеход'],
+ correct:1,
+ ex:'Владелец источника повышенной опасности отвечает за причинённый им вред независимо от вины; освобождает лишь непреодолимая сила или умысел потерпевшего (ст. 1079). Это пример «безвиновной» (строгой) ответственности.',
+ refs:['ст. 1079 ГК'],h1:'Машина опасна сама по себе — вина не нужна.',h2:'Ответственность без вины (строгая).'},
+{id:'dl8',t:'delikt',l:'x',type:'single',
+ q:'Почему российскую систему деликтов называют «российским генеральным деликтом»?',
+ opts:['Потому что вред не возмещается вообще','Есть общая норма о возмещении ЛЮБОГО вреда (ст. 1064), но гл. 59 построена как набор специальных деликтов','Потому что перечень деликтов закрытый (сингулярная система)','Потому что отвечает только государство'],
+ correct:1,
+ ex:'Система генерального деликта означает общее указание на возмещение любого вреда (ст. 1064). При этом гл. 59 содержит ряд специальных деликтов (источник повышенной опасности, вред малолетними и т. д.) — отсюда название «российский генеральный деликт».',
+ refs:['ст. 1064 ГК'],h1:'Сравни с сингулярной системой (закрытый перечень).',h2:'Общая норма о любом вреде + специальные деликты.'},
+{id:'dl9',t:'delikt',l:'x',type:'single',
+ q:'Гражданин, ограниченный в дееспособности вследствие злоупотребления спиртным или наркотиками, причинил вред. Кто отвечает?',
+ opts:['Его попечитель','Сам причинитель вреда','Никто','Государство'],
+ correct:1,
+ ex:'Вред, причинённый гражданином, ограниченным в дееспособности из-за злоупотребления спиртным/наркотиками, возмещается самим причинителем (ст. 1077) — в отличие от недееспособного, за которого отвечает опекун.',
+ refs:['ст. 1077 ГК'],h1:'Ограниченно дееспособный — всё же дееспособен в основном.',h2:'Отвечает сам.'},
+
+/* --- неосновательное обогащение --- */
+{id:'no4',t:'neob',l:'m',type:'tf',
+ q:'Для возникновения обязательства из неосновательного обогащения не имеет значения, по чьей воле и по какой причине произошло обогащение.',
+ correct:true,
+ ex:'П. 2 ст. 1102: правила о НО применяются независимо от того, явилось ли обогащение результатом поведения обогатившегося, потерпевшего, третьих лиц или произошло помимо их воли.',
+ refs:['ст. 1102 ГК'],h1:'Важен результат, а не «как так вышло».',h2:'Да, причина и воля значения не имеют.'},
+{id:'no5',t:'neob',l:'x',type:'single',
+ q:'Какова роль норм о неосновательном обогащении по отношению к реституции, виндикации, договорным и деликтным требованиям?',
+ opts:['Они полностью заменяют эти требования','Они применяются субсидиарно — если из закона или существа отношений не следует иное','Они не связаны с этими требованиями','Они применяются только к деликтам'],
+ correct:1,
+ ex:'Нормы о НО применяются субсидиарно к требованиям о возврате исполненного по недействительной сделке, виндикации, договорным и деликтным требованиям, если иное не вытекает из закона или существа отношений (ст. 1103). Это «универсальный восполнитель».',
+ refs:['ст. 1103 ГК'],h1:'НО — «резервный» инструмент.',h2:'Субсидиарное применение (ст. 1103).'},
+
+/* --- интеллектуальная собственность --- */
+{id:'is4',t:'is',l:'j',type:'multi',
+ q:'Какие из перечисленных объектов охраняются патентным правом?',
+ opts:['Изобретения','Полезные модели','Промышленные образцы','Товарные знаки'],
+ correct:[0,1,2],
+ ex:'Патентное право охраняет изобретения, полезные модели и промышленные образцы (ИПМиПО). Товарный знак — средство индивидуализации, охраняется отдельным институтом (§ 2 гл. 76).',
+ refs:['ст. 1345 ГК'],h1:'Запомни аббревиатуру ИПМиПО.',h2:'Товарный знак — это не патент, а средство индивидуализации.'},
+{id:'is5',t:'is',l:'m',type:'tf',
+ q:'Если работодатель в течение 6 месяцев со дня уведомления работником не подаст заявку на патент, не передаст право и не засекретит результат, право на получение патента возвращается работнику.',
+ correct:true,
+ ex:'По ст. 1370: при бездействии работодателя в течение 6 месяцев право на получение патента на служебный объект возвращается работнику; работодатель тогда сохраняет право использования на условиях простой лицензии с выплатой вознаграждения.',
+ refs:['ст. 1370 ГК'],h1:'У работодателя есть «окно» в полгода.',h2:'Да: не успел за 6 месяцев — право у работника.'},
+{id:'is6',t:'is',l:'x',type:'single',
+ q:'Право авторства и право автора на имя в авторском праве…',
+ opts:['Действуют 70 лет','Отчуждаемы по договору','Охраняются бессрочно и неотчуждаемы','Прекращаются со смертью автора'],
+ correct:2,
+ ex:'Личные неимущественные права — право авторства и право на имя — неотчуждаемы и непередаваемы, охраняются бессрочно (ст. 1265, 1267). Отказ от них ничтожен. Это отличается от срочного исключительного (имущественного) права.',
+ refs:['ст. 1265, 1267 ГК'],h1:'«Кто автор» не продаётся и не истекает.',h2:'Бессрочны и неотчуждаемы.'},
+
+/* --- наследование --- */
+{id:'ns9',t:'nasled',l:'j',type:'single',
+ q:'Временем открытия наследства является…',
+ opts:['День составления завещания','День смерти гражданина (или вступления в силу решения суда об объявлении умершим)','День обращения к нотариусу','День похорон'],
+ correct:1,
+ ex:'Время открытия наследства — день смерти гражданина, а при объявлении умершим — день вступления в силу решения суда (или день предполагаемой гибели, указанный судом) (ст. 1113, 1114).',
+ refs:['ст. 1113, 1114 ГК'],h1:'Наследство «открывается» в связи со смертью.',h2:'День смерти наследодателя.'},
+{id:'ns10',t:'nasled',l:'m',type:'single',
+ q:'Местом открытия наследства по общему правилу является…',
+ opts:['Место работы наследодателя','Последнее место жительства наследодателя','Место нахождения нотариуса','Место рождения наследодателя'],
+ correct:1,
+ ex:'Место открытия наследства — последнее место жительства наследодателя (ст. 1115). Если оно неизвестно или вне РФ — место нахождения недвижимого имущества (или наиболее ценной его части), а при отсутствии — движимого.',
+ refs:['ст. 1115 ГК'],h1:'Где человек жил в последнее время?',h2:'Последнее место жительства.'},
+{id:'ns11',t:'nasled',l:'x',type:'single',
+ q:'Гражданин умышленными противоправными действиями против наследодателя способствовал призванию себя к наследованию. Каковы последствия?',
+ opts:['Получает долю в полном объёме','Признаётся недостойным наследником и отстраняется от наследования (по подтверждении в суде)','Получает половину доли','Наследует только по завещанию'],
+ correct:1,
+ ex:'Такой гражданин — недостойный наследник: не наследует ни по закону, ни по завещанию (обстоятельства подтверждаются судом), ст. 1117. Но если наследодатель завещал ему имущество ПОСЛЕ утраты права (т. е. простил), он вправе наследовать.',
+ refs:['ст. 1117 ГК'],h1:'«Помог себе» преступлением — закон против него.',h2:'Недостойный наследник, отстраняется (если суд подтвердит).'},
+{id:'ns12',t:'nasled',l:'x',type:'tf',
+ q:'Право на обязательную долю удовлетворяется прежде всего из незавещанной части наследственного имущества.',
+ correct:true,
+ ex:'Право на обязательную долю удовлетворяется в первую очередь из незавещанной части имущества, даже если это уменьшит права наследников по закону на эту часть; при недостаточности — из завещанного (п. 2 ст. 1149).',
+ refs:['ст. 1149 ГК'],h1:'Сначала «трогают» то, что не завещано.',h2:'Да: сперва из незавещанной части.'},
+];
+
+/* ранги по рейтингу */
+const RANKS = [
+  {min:0,    name:'Абитуриент',            seal:'🎒'},
+  {min:120,  name:'Студент-первокурсник',  seal:'📘'},
+  {min:350,  name:'Бакалавр права',        seal:'🎓'},
+  {min:800,  name:'Дипломированный юрист',  seal:'⚖️'},
+  {min:1500, name:'Кандидат в магистры',   seal:'🏛️'},
+  {min:2600, name:'Магистр частного права', seal:'👑'},
+  {min:4200, name:'Цивилист — легенда кафедры', seal:'🦉'},
+];
+
+</script>
+<script>
+/* ============================================================
+   Тренажёр ГП — логика (упрощённая, единый поток уровней)
+   ============================================================ */
+'use strict';
+
+const SCHEMA_VERSION = 2;                 // ← растёт при изменении формата профиля
+const PTS  = {j:10, m:18, x:30};          // очки за верный ответ по сложности
+const PEN  = {j:4,  m:6,  x:9};           // штраф за неверный (можно уйти в минус)
+const HINT_COST = {lite:0.30, full:0.70}; // доля стоимости за подсказку
+const DIFF = {j:{n:'Базовый',c:'d-j'}, m:{n:'Средний',c:'d-m'}, x:{n:'Сложный',c:'d-x'}};
+const DORDER = {j:0,m:1,x:2};
+const LEN_OPTS = [5,10,15,25];
+
+// единая лестница уровней (рейтинг → уровень, что открыто)
+const PLAYER_LEVELS = [
+  {lvl:1, min:0,    name:'Стажёр',                 seal:'🎒', tiers:['j']},
+  {lvl:2, min:120,  name:'Помощник юриста',         seal:'📘', tiers:['j']},
+  {lvl:3, min:320,  name:'Юрист',                   seal:'⚖️', tiers:['j','m']},
+  {lvl:4, min:650,  name:'Старший юрист',           seal:'📑', tiers:['j','m']},
+  {lvl:5, min:1100, name:'Советник права',          seal:'🏛️', tiers:['j','m','x']},
+  {lvl:6, min:1800, name:'Магистр частного права',  seal:'🎓', tiers:['j','m','x']},
+  {lvl:7, min:2800, name:'Цивилист',                seal:'🦉', tiers:['j','m','x']},
+];
+function levelOf(r){ let cur=PLAYER_LEVELS[0]; for(const x of PLAYER_LEVELS){ if(r>=x.min) cur=x; } return cur; }
+function nextLevel(r){ for(const x of PLAYER_LEVELS){ if(x.min>r) return x; } return null; }
+
+const state = { profile:null, setup:{topics:new Set(), length:10} };
+
+/* ---------- утилиты ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const initials=(f,l)=>((f||'?')[0]+((l||'')[0]||'')).toUpperCase();
+function slugify(f,l){ const b=(f+'-'+l).toLowerCase().replace(/[\s'"\/\\]+/g,'-').replace(/[^0-9a-zа-яё-]/gi,'').replace(/-+/g,'-').replace(/^-|-$/g,''); return (b||'igrok')+'-'+Math.random().toString(36).slice(2,6); }
+let toastT; function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2000); }
+
+/* ============================================================
+   ПРОФИЛИ + МИГРАЦИЯ (обновления кода не ломают рейтинги)
+   ============================================================ */
+function migrate(p){
+  if(!p) return null;
+  p.stats   = (p.stats && typeof p.stats==='object') ? p.stats : {};
+  p.sessions= Array.isArray(p.sessions) ? p.sessions : [];
+  if(typeof p.rating!=='number' || !isFinite(p.rating)) p.rating=0;
+  if(!p.first) p.first='Игрок';
+  if(typeof p.last!=='string') p.last='';
+  p.v = SCHEMA_VERSION;
+  return p;
+}
+async function loadIndex(){ const r=await Store.get('profiles:index'); try{return r?JSON.parse(r):[];}catch(e){return [];} }
+async function saveIndex(i){ await Store.set('profiles:index', JSON.stringify(i)); }
+async function loadProfile(slug){ const r=await Store.get('profile:'+slug); try{ return migrate(r?JSON.parse(r):null); }catch(e){ return null; } }
+async function saveProfile(p){
+  if(typeof p.rating!=='number'||!isFinite(p.rating)) p.rating=0; // защита от мусора
+  await Store.set('profile:'+p.slug, JSON.stringify(p));
+  const idx=await loadIndex();
+  const i=idx.findIndex(x=>x.slug===p.slug);
+  const e={slug:p.slug,first:p.first,last:p.last,rating:p.rating};
+  if(i>=0) idx[i]=e; else idx.push(e);
+  idx.sort((a,b)=>b.rating-a.rating);
+  await saveIndex(idx);
+  await Store.lbPush(p.slug,{first:p.first,last:p.last,rating:p.rating});
+}
+function newProfile(f,l){ return {slug:slugify(f,l),first:f,last:l||'',rating:0,stats:{},sessions:[],v:SCHEMA_VERSION,createdAt:Date.now()}; }
+
+/* ============================================================
+   ВХОД + АВТОВХОД (браузер запоминает игрока)
+   ============================================================ */
+async function init(){
+  // навигация / общие обработчики
+  $('#btn-enter').onclick=doEnter;
+  $('#in-first').addEventListener('keydown',e=>{if(e.key==='Enter')$('#in-last').focus();});
+  $('#in-last').addEventListener('keydown',e=>{if(e.key==='Enter')doEnter();});
+  $$('.top nav button').forEach(b=>b.onclick=()=>nav(b.dataset.nav));
+  $('#brand-home').onclick=()=>nav('setup');
+  $('#userchip').onclick=async()=>{ if(confirm('Сменить игрока? Текущий прогресс сохранён.')){ await Store.set('active',''); location.reload(); } };
+  $('#btn-start').onclick=startSession;
+
+  // автовход
+  const active=await Store.get('active');
+  if(active){
+    const p=await loadProfile(active);
+    if(p){ state.profile=p; afterLogin(); return; }
+  }
+  // иначе — экран входа + список вернувшихся
+  const idx=await loadIndex();
+  if(idx.length){
+    $('#returning').style.display='block';
+    const host=$('#return-list'); host.innerHTML='';
+    idx.slice(0,8).forEach(p=>{
+      const b=document.createElement('button'); b.className='return-chip';
+      b.innerHTML=`<span class="av">${initials(p.first,p.last)}</span> ${p.first} ${p.last}`;
+      b.onclick=()=>enterAs(p.slug);
+      host.appendChild(b);
+    });
+  }
+}
+async function doEnter(){
+  const f=$('#in-first').value.trim(), l=$('#in-last').value.trim();
+  if(!f){ $('#in-first').focus(); toast('Введите имя'); return; }
+  const p=newProfile(f,l); state.profile=p;
+  await Store.set('active',p.slug);
+  await saveProfile(p);
+  afterLogin();
+}
+async function enterAs(slug){
+  const p=await loadProfile(slug); if(!p){ toast('Профиль не найден'); return; }
+  state.profile=p; await Store.set('active',slug); afterLogin();
+}
+function afterLogin(){
+  $('#screen-gate').classList.remove('active');
+  $('#top').style.display='block'; $('#app').style.display='block';
+  refreshChip(); buildSetup(); nav('setup'); window.scrollTo(0,0);
+}
+function refreshChip(){
+  const p=state.profile;
+  $('#chip-av').textContent=initials(p.first,p.last);
+  $('#chip-name').textContent=p.first+(p.last?' '+p.last[0]+'.':'');
+  $('#chip-rating').textContent=p.rating+' ◆';
+}
+
+/* ============================================================
+   НАВИГАЦИЯ
+   ============================================================ */
+function nav(name){
+  $$('.screen').forEach(s=>s.classList.remove('active'));
+  const map={setup:'screen-setup',quiz:'screen-quiz',result:'screen-result',progress:'screen-progress',leaderboard:'screen-leaderboard'};
+  $('#'+map[name]).classList.add('active');
+  $$('.top nav button').forEach(b=>b.classList.toggle('on', b.dataset.nav===name));
+  if(name==='leaderboard') renderLeaderboard();
+  if(name==='progress') renderProgress();
+  if(name!=='quiz') window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ============================================================
+   НАСТРОЙКА (единый поток, без выбора уровня)
+   ============================================================ */
+function topicAcc(id){ const s=state.profile?.stats?.[id]; return (s&&s.seen)?Math.round(100*s.correct/s.seen):null; }
+function unlockedTiers(){ return levelOf(state.profile.rating).tiers; }
+function availablePool(){
+  const t=unlockedTiers();
+  let p=QUESTIONS.filter(q=>t.includes(q.l));
+  if(state.setup.topics.size) p=p.filter(q=>state.setup.topics.has(q.t));
+  return p;
+}
+function buildSetup(){
+  renderLevelBanner();
+  // темы
+  const tg=$('#topic-grid'); tg.innerHTML='';
+  TOPICS.forEach(t=>{
+    const acc=topicAcc(t.id);
+    const c=document.createElement('button');
+    c.className='topic-card'+(state.setup.topics.has(t.id)?' sel':'');
+    let badge='';
+    if(acc!==null){ const col= acc>=80?'rgba(79,157,107,.22);color:#7fd0a0':acc>=55?'rgba(212,175,82,.22);color:var(--gold)':'rgba(208,93,93,.22);color:#e08585'; badge=`<span class="acc" style="background:${col}">${acc}%</span>`; }
+    c.innerHTML=`<span class="ck">✓</span>${badge}<div class="te">${t.e}</div><div class="tn">${t.n}</div>`;
+    c.onclick=()=>{ state.setup.topics.has(t.id)?state.setup.topics.delete(t.id):state.setup.topics.add(t.id); buildSetup(); };
+    tg.appendChild(c);
+  });
+  // длина
+  const lr=$('#len-row'); lr.innerHTML='';
+  LEN_OPTS.forEach(n=>{ const b=document.createElement('button'); b.className='chip'+(state.setup.length===n?' sel':''); b.textContent=n; b.onclick=()=>{state.setup.length=n;buildSetup();}; lr.appendChild(b); });
+  // сводка
+  const avail=availablePool().length;
+  const n=Math.min(state.setup.length, avail);
+  const tcount=state.setup.topics.size;
+  $('#setup-sum').innerHTML = avail===0
+    ? `<b style="color:var(--red)">На твоём уровне по этим темам вопросов нет.</b> Повышай уровень или выбери другие темы.`
+    : `${tcount?tcount+' тем':'весь курс'} · <b>${n}</b> вопросов · сложность по твоему уровню`;
+  $('#btn-start').disabled = avail===0;
+}
+function renderLevelBanner(){
+  const p=state.profile, lv=levelOf(p.rating), nx=nextLevel(p.rating);
+  const prevMin=lv.min, nextMin=nx?nx.min:lv.min;
+  const into=Math.max(0,p.rating-prevMin), span=Math.max(1,nextMin-prevMin);
+  const pct= nx? Math.min(100,Math.round(100*into/span)) : 100;
+  const tierTxt = lv.tiers.map(t=>DIFF[t].n).join(' · ');
+  // когда откроется следующая сложность
+  let unlockMsg='Все типы вопросов уже открыты.';
+  const future=PLAYER_LEVELS.find(L=>L.lvl>lv.lvl && L.tiers.length>lv.tiers.length);
+  if(future){ const newTier=future.tiers.find(t=>!lv.tiers.includes(t)); unlockMsg=`На уровне «${future.name}» откроются <b>${DIFF[newTier].n.toLowerCase()}</b> вопросы.`; }
+  $('#lvl-banner').innerHTML=`
+    <div class="row">
+      <div class="lvl-seal">${lv.seal}</div>
+      <div class="info">
+        <div class="lab">Уровень ${lv.lvl} · ${p.rating} ◆</div>
+        <h3>${lv.name}</h3>
+        <div class="lvl-bar"><div class="fill" style="width:${pct}%"></div></div>
+        <div class="lvl-next">${nx?`до уровня «${nx.name}» — ещё <b style="color:var(--gold)">${nextMin-p.rating} ◆</b>`:'максимальный уровень достигнут'}</div>
+      </div>
+    </div>
+    <div class="unlock-note">Сейчас в вопросах: <b>${tierTxt}</b>. ${unlockMsg}</div>`;
+}
+
+/* ============================================================
+   СЕССИЯ — взвешенный подбор по доступной сложности + рост
+   ============================================================ */
+let S=null, answerBtn=null;
+function buildSessionQs(){
+  const t=unlockedTiers(), w={j:1,m:2,x:3};
+  let p=QUESTIONS.filter(q=>t.includes(q.l));
+  if(state.setup.topics.size) p=p.filter(q=>state.setup.topics.has(q.t));
+  if(!p.length) return [];
+  const picks=p.map(q=>({q,k:Math.random()**(1/(w[q.l]||1))})).sort((a,b)=>b.k-a.k).slice(0,state.setup.length).map(o=>o.q);
+  picks.sort((a,b)=>DORDER[a.l]-DORDER[b.l]); // лёгкие → сложные внутри сессии
+  return picks;
+}
+function startSession(){
+  const qs=buildSessionQs(); if(!qs.length) return;
+  S={ qs, i:0, score:0, results:[], startRating:state.profile.rating };
+  nav('quiz'); renderQuestion();
+}
+function quitSession(){
+  if(S && S.results.length){ if(!confirm('Прервать? Набранное (включая минусы) сохранится.')) return; commitSession(true); return; }
+  S=null; nav('setup');
+}
+
+function renderQuestion(){
+  const q=S.qs[S.i];
+  $('#prog').style.width=(100*S.i/S.qs.length)+'%';
+  $('#qmeta').textContent=`${S.i+1} / ${S.qs.length}`;
+  $('#qscore').textContent=S.score+' ◆';
+  $('#btn-quit').onclick=quitSession;
+  const topic=TOPICS.find(t=>t.id===q.t);
+  const ans={picked:null,multi:new Set(),tf:null,matchPairs:{},matchActive:null,order:null,locked:false,hints:{lite:false,full:false},hintCost:0};
+  S.cur=ans;
+  const card=document.createElement('div'); card.className='qcard';
+  card.innerHTML=`
+    <div class="qtags">
+      <span class="qtag topic">${topic.e} ${topic.n}</span>
+      <span class="qtag ${DIFF[q.l].c}">${DIFF[q.l].n}</span>
+      <span class="qtag type">${TYPE_LABEL[q.type]}</span>
+    </div>
+    <p class="qtext">${q.q}</p>
+    <div id="body"></div>
+    <div class="hints" id="hints"></div>
+    <div class="hint-out lite" id="hint-lite"></div>
+    <div class="hint-out full" id="hint-full"></div>
+    <div class="verdict" id="verdict"></div>
+    <div class="q-actions" id="qactions"></div>`;
+  $('#q-host').innerHTML=''; $('#q-host').appendChild(card);
+  buildBody(q,ans); buildHints(q,ans); buildActions(q,ans);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- тело вопроса ---------- */
+function buildBody(q,ans){
+  const body=$('#body'); body.innerHTML=''; const L='АБВГДЕЖЗ';
+  if(q.type==='single'||q.type==='casus'){
+    const w=document.createElement('div'); w.className='opts';
+    q.opts.forEach((o,ix)=>{ const b=document.createElement('button'); b.className='opt'; b.innerHTML=`<span class="mk">${L[ix]}</span><span>${o}</span>`;
+      b.onclick=()=>{ if(ans.locked)return; ans.picked=ix; $$('.opt',w).forEach((x,j)=>x.classList.toggle('sel',j===ix)); enableAns(true); }; w.appendChild(b); });
+    body.appendChild(w);
+  } else if(q.type==='multi'){
+    const w=document.createElement('div'); w.className='opts';
+    q.opts.forEach((o,ix)=>{ const b=document.createElement('button'); b.className='opt multi'; b.innerHTML=`<span class="mk">${L[ix]}</span><span>${o}</span>`;
+      b.onclick=()=>{ if(ans.locked)return; ans.multi.has(ix)?ans.multi.delete(ix):ans.multi.add(ix); b.classList.toggle('sel',ans.multi.has(ix)); enableAns(ans.multi.size>0); }; w.appendChild(b); });
+    body.appendChild(w);
+  } else if(q.type==='tf'){
+    const r=document.createElement('div'); r.className='tf-row';
+    [['Верно',true,'✓'],['Неверно',false,'✕']].forEach(([t,v,ic])=>{ const b=document.createElement('button'); b.className='tf-btn'; b.innerHTML=`<span class="ic">${ic}</span>${t}`;
+      b.onclick=()=>{ if(ans.locked)return; ans.tf=v; $$('.tf-btn',r).forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); enableAns(true); }; r.appendChild(b); });
+    body.appendChild(r);
+  } else if(q.type==='input'){
+    const w=document.createElement('div'); w.className='input-wrap';
+    const inp=document.createElement('input'); inp.className='art-input'; inp.id='artin'; inp.placeholder='Напр.: ст. 454 или 454'; inp.autocomplete='off';
+    inp.oninput=()=>enableAns(inp.value.trim().length>0);
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!ans.locked&&inp.value.trim())checkAnswer(q,ans); });
+    w.appendChild(inp); body.appendChild(w);
+  } else if(q.type==='match'){
+    const lefts=q.pairs.map((p,i)=>({...p,i}));
+    const rights=lefts.map(p=>({txt:p.r,i:p.i})).map(x=>({x,k:Math.random()})).sort((a,b)=>a.k-b.k).map(o=>o.x);
+    ans._lefts=lefts;
+    const g=document.createElement('div'); g.className='match-grid';
+    const cl=document.createElement('div'); cl.className='match-col'; cl.innerHTML='<h4>Понятие</h4>';
+    const cr=document.createElement('div'); cr.className='match-col'; cr.innerHTML='<h4>Описание</h4>';
+    lefts.forEach(p=>{ const b=document.createElement('button'); b.className='match-item'; b.dataset.li=p.i; b.innerHTML=`<span class="badge"></span>${p.l}`; b.onclick=()=>matchPick('L',p.i,b,ans); cl.appendChild(b); });
+    rights.forEach(p=>{ const b=document.createElement('button'); b.className='match-item'; b.dataset.ri=p.i; b.innerHTML=`<span class="badge"></span>${p.txt}`; b.onclick=()=>matchPick('R',p.i,b,ans); cr.appendChild(b); });
+    g.appendChild(cl); g.appendChild(cr);
+    const tip=document.createElement('div'); tip.className='match-hint'; tip.textContent='Нажми понятие слева, затем его описание справа.'; g.appendChild(tip);
+    body.appendChild(g);
+  } else if(q.type==='order'){
+    ans.order=q.items.map((t,i)=>({t,orig:i})).map(x=>({x,k:Math.random()})).sort((a,b)=>a.k-b.k).map(o=>o.x);
+    const list=document.createElement('div'); list.className='order-list'; list.id='orderlist'; body.appendChild(list);
+    renderOrder(q,ans); enableAns(true);
+  }
+}
+function matchPick(side,i,el,ans){
+  if(ans.locked)return;
+  if(side==='L'){
+    $$('.match-item[data-li]').forEach(x=>x.classList.remove('active'));
+    if(ans.matchActive&&ans.matchActive.li===i){ ans.matchActive=null; return; }
+    if(i in ans.matchPairs) unpair(i,ans);
+    ans.matchActive={li:i,el}; el.classList.add('active');
+  } else {
+    if(!ans.matchActive){ toast('Сначала выбери понятие слева'); return; }
+    for(const [li,ri] of Object.entries(ans.matchPairs)){ if(ri===i) unpair(+li,ans); }
+    const li=ans.matchActive.li; ans.matchPairs[li]=i;
+    const no=Object.keys(ans.matchPairs).length;
+    badge(ans.matchActive.el,no); badge(el,no);
+    ans.matchActive.el.classList.add('done'); el.classList.add('done');
+    ans.matchActive.el.classList.remove('active'); ans.matchActive=null;
+    enableAns(Object.keys(ans.matchPairs).length===ans._lefts.length);
+  }
+}
+function unpair(li,ans){ const ri=ans.matchPairs[li]; delete ans.matchPairs[li];
+  [$(`.match-item[data-li="${li}"]`),$(`.match-item[data-ri="${ri}"]`)].forEach(x=>{ if(x){x.classList.remove('done'); x.querySelector('.badge').textContent='';} }); }
+function badge(el,no){ const b=el.querySelector('.badge'); b.textContent=no; b.style.display='grid'; }
+function renderOrder(q,ans){
+  const list=$('#orderlist'); list.innerHTML='';
+  ans.order.forEach((it,ix)=>{ const row=document.createElement('div'); row.className='order-item';
+    row.innerHTML=`<span class="num">${ix+1}</span><span style="flex:1">${it.t}</span><span class="ctrls"><button ${ix===0?'disabled':''} data-up>↑</button><button ${ix===ans.order.length-1?'disabled':''} data-down>↓</button></span>`;
+    if(!ans.locked){ row.querySelector('[data-up]')?.addEventListener('click',()=>{ if(ix>0){[ans.order[ix-1],ans.order[ix]]=[ans.order[ix],ans.order[ix-1]];renderOrder(q,ans);} });
+      row.querySelector('[data-down]')?.addEventListener('click',()=>{ if(ix<ans.order.length-1){[ans.order[ix+1],ans.order[ix]]=[ans.order[ix],ans.order[ix+1]];renderOrder(q,ans);} }); }
+    list.appendChild(row); });
+}
+
+/* ---------- подсказки ---------- */
+function buildHints(q,ans){
+  const z=$('#hints'); z.innerHTML=''; const base=PTS[q.l];
+  const lc=Math.round(base*HINT_COST.lite), fc=Math.round(base*HINT_COST.full);
+  const b1=document.createElement('button'); b1.className='hint-btn'; b1.innerHTML=`💡 Намёк <span class="cost">−${lc}◆</span>`;
+  b1.onclick=()=>{ if(ans.locked||ans.hints.lite)return; ans.hints.lite=true; ans.hintCost+=lc; b1.disabled=true; const o=$('#hint-lite'); o.innerHTML='<b>Намёк.</b> '+q.h1; o.classList.add('show'); };
+  const b2=document.createElement('button'); b2.className='hint-btn'; b2.innerHTML=`📖 Подсказка <span class="cost">−${fc}◆</span>`;
+  b2.onclick=()=>{ if(ans.locked||ans.hints.full)return; ans.hints.full=true; ans.hintCost+=fc; b2.disabled=true; const o=$('#hint-full'); o.innerHTML='<b>Разбор.</b> '+q.h2; o.classList.add('show'); };
+  z.appendChild(b1); z.appendChild(b2);
+}
+
+/* ---------- действия ---------- */
+function buildActions(q,ans){
+  const a=$('#qactions'); a.innerHTML='';
+  answerBtn=document.createElement('button'); answerBtn.className='btn btn-primary'; answerBtn.textContent='Ответить';
+  answerBtn.disabled=(q.type!=='order'); answerBtn.onclick=()=>checkAnswer(q,ans);
+  const skip=document.createElement('button'); skip.className='skip'; skip.textContent='Не знаю';
+  skip.onclick=()=>{ if(ans.locked)return; checkAnswer(q,ans,true); };
+  a.appendChild(answerBtn); a.appendChild(skip);
+}
+function enableAns(on){ if(answerBtn&&!S.cur.locked) answerBtn.disabled=!on; }
+
+/* ---------- проверка ---------- */
+function checkAnswer(q,ans,skip=false){
+  if(ans.locked)return; ans.locked=true; let ok=false;
+  if(skip){ revealCorrect(q,ans); }
+  else if(q.type==='single'||q.type==='casus'){ ok=ans.picked===q.correct;
+    $$('.opt').forEach((el,ix)=>{ el.classList.add('lock'); if(ix===q.correct)el.classList.add('correct'); else if(ix===ans.picked)el.classList.add('wrong'); }); }
+  else if(q.type==='multi'){ const want=new Set(q.correct); ok=want.size===ans.multi.size&&[...want].every(x=>ans.multi.has(x));
+    $$('.opt').forEach((el,ix)=>{ el.classList.add('lock'); const W=want.has(ix),P=ans.multi.has(ix); if(W&&P)el.classList.add('correct'); else if(P&&!W)el.classList.add('wrong'); else if(W&&!P)el.classList.add('miss','correct'); }); }
+  else if(q.type==='tf'){ ok=ans.tf===q.correct;
+    $$('.tf-btn').forEach(el=>{ el.classList.add('lock'); const v=el.textContent.includes('Верно'); if(v===q.correct)el.classList.add('correct'); else if(v===ans.tf)el.classList.add('wrong'); }); }
+  else if(q.type==='input'){ const inp=$('#artin'); const norm=s=>s.toLowerCase().replace(/ст|гк|рф|месяц(ев|а)?|рубл(ей|я|ь)?|тыс/g,'').replace(/[\s.,№()]+/g,'').trim();
+    ok=q.answers.some(a=>norm(a)===norm(inp.value)); inp.classList.add(ok?'correct':'wrong'); inp.disabled=true; }
+  else if(q.type==='match'){ ok=true; ans._lefts.forEach(p=>{ const ri=ans.matchPairs[p.i]; const good=ri===p.i; if(!good)ok=false;
+      [$(`.match-item[data-li="${p.i}"]`),$(`.match-item[data-ri="${ri}"]`)].forEach(x=>{ if(x){x.classList.add('lock',good?'ok':'bad'); const bd=x.querySelector('.badge'); bd.textContent=good?'✓':'✕'; bd.style.display='grid';} }); });
+    if(!ok) ans._lefts.forEach(p=>{ const re=$(`.match-item[data-ri="${p.i}"]`); if(re&&!re.classList.contains('ok')) re.style.boxShadow='inset 0 0 0 2px var(--green)'; }); }
+  else if(q.type==='order'){ ok=ans.order.every((it,ix)=>it.orig===ix);
+    $$('#orderlist .order-item').forEach((row,ix)=>{ row.classList.add(ans.order[ix].orig===ix?'ok':'bad'); row.querySelectorAll('button').forEach(b=>b.disabled=true); }); }
+  $$('.hint-btn').forEach(b=>b.disabled=true);
+  record(q,ans,ok,skip);
+}
+function revealCorrect(q,ans){
+  if(q.type==='single'||q.type==='casus'){ $$('.opt').forEach((el,ix)=>{el.classList.add('lock'); if(ix===q.correct)el.classList.add('correct');}); }
+  else if(q.type==='multi'){ const w=new Set(q.correct); $$('.opt').forEach((el,ix)=>{el.classList.add('lock'); if(w.has(ix))el.classList.add('correct','miss');}); }
+  else if(q.type==='tf'){ $$('.tf-btn').forEach(el=>{el.classList.add('lock'); if(el.textContent.includes('Верно')===q.correct)el.classList.add('correct');}); }
+  else if(q.type==='input'){ const i=$('#artin'); i.disabled=true; i.value=q.answers[0]; i.classList.add('correct'); }
+  else if(q.type==='match'){ ans._lefts.forEach(p=>{ [$(`.match-item[data-li="${p.i}"]`),$(`.match-item[data-ri="${p.i}"]`)].forEach(x=>{ if(x){x.classList.add('lock','ok'); const b=x.querySelector('.badge'); b.textContent='✓'; b.style.display='grid';} }); }); }
+  else if(q.type==='order'){ ans.order.sort((a,b)=>a.orig-b.orig); renderOrder(q,ans); $$('#orderlist .order-item').forEach(r=>{r.classList.add('ok'); r.querySelectorAll('button').forEach(b=>b.disabled=true);}); }
+}
+
+/* ---------- запись + разбор (с минусами) ---------- */
+function record(q,ans,ok,skip){
+  const base=PTS[q.l];
+  let earned;
+  if(skip) earned=0;
+  else if(ok) earned=Math.max(0, base-ans.hintCost);
+  else earned=-PEN[q.l];                       // ← штраф, рейтинг может уйти в минус
+  S.score+=earned; $('#qscore').textContent=S.score+' ◆';
+  S.results.push({qid:q.id,topic:q.t,level:q.l,correct:(ok&&!skip),earned,skipped:skip,hints:(ans.hints.lite?1:0)+(ans.hints.full?1:0)});
+
+  const vb=$('#verdict'); vb.className='verdict show '+((ok&&!skip)?'right':'wrong');
+  const refs=(q.refs||[]).map(r=>`<span class="ref">${r}</span>`).join('');
+  const head= skip?'Пропущено': ok?'Верно':'Неверно';
+  const ic= (ok&&!skip)?'✓':(skip?'–':'✕');
+  const gain= earned>0?`+${earned}◆` : earned<0?`${earned}◆` : (ans.hintCost>0&&ok?'+0◆':'0◆');
+  vb.innerHTML=`<div class="head"><span class="ic">${ic}</span>${head}<span class="gain">${gain}</span></div>
+    <div class="body"><p class="lbl">Разбор</p><div>${q.ex}</div>${refs?`<div class="refs">${refs}</div>`:''}</div>`;
+
+  const a=$('#qactions'); a.innerHTML='';
+  const last=S.i>=S.qs.length-1;
+  const next=document.createElement('button'); next.className='btn btn-primary'; next.textContent=last?'Завершить →':'Дальше →';
+  next.onclick=()=>{ if(last) commitSession(false); else { S.i++; renderQuestion(); } };
+  a.appendChild(next);
+  vb.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ---------- завершение ---------- */
+async function commitSession(premature){
+  const p=state.profile;
+  S.results.forEach(r=>{ p.stats[r.topic]=p.stats[r.topic]||{seen:0,correct:0}; p.stats[r.topic].seen++; if(r.correct)p.stats[r.topic].correct++; });
+  const before=p.rating;
+  p.rating += S.score;                         // без нижней границы — можно в минус
+  p.sessions.push({ts:Date.now(),answered:S.results.length,right:S.results.filter(r=>r.correct).length,score:S.score});
+  if(p.sessions.length>40) p.sessions=p.sessions.slice(-40);
+  await saveProfile(p); refreshChip();
+  const sessResults=S.results.slice();
+  renderResult(before, premature, sessResults);
+  S=null; nav('result');
+}
+
+/* ============================================================
+   РЕЗУЛЬТАТ
+   ============================================================ */
+function renderResult(beforeRating, premature, results){
+  const p=state.profile;
+  results = results || [];
+  const sessionScore = results.reduce((a,r)=>a+r.earned,0);
+  const answered = results.length;
+  const right = results.filter(r=>r.correct).length;
+  const acc= answered?Math.round(100*right/answered):0;
+  const lvlBefore=levelOf(beforeRating).lvl, lvlNow=levelOf(p.rating).lvl;
+  const leveledUp= lvlNow>lvlBefore;
+  const leveledDown= lvlNow<lvlBefore;
+
+  const byTopic={}; results.forEach(r=>{ byTopic[r.topic]=byTopic[r.topic]||{seen:0,ok:0}; byTopic[r.topic].seen++; if(r.correct)byTopic[r.topic].ok++; });
+  const rows=Object.entries(byTopic).map(([id,v])=>({id,...v,pct:Math.round(100*v.ok/v.seen)})).sort((a,b)=>a.pct-b.pct);
+  const weak=rows.filter(t=>t.pct<60);
+
+  let verdict,sub;
+  if(sessionScore<0){ verdict='Минус за сессию'; sub='Ошибки перевесили. Возьми подсказки, не угадывай наугад — за неверный ответ снимают очки.'; }
+  else if(acc>=85){ verdict='Отличный результат'; sub='Уверенно. На экзамене так держать.'; }
+  else if(acc>=65){ verdict='Хорошо'; sub='База есть, пара тем плавает — добей их ниже.'; }
+  else if(acc>=40){ verdict='Зона роста'; sub='Половина наугад. Пройдись по слабым темам.'; }
+  else { verdict='Нужно повторить'; sub='Пока больше угадывания. Это нормально — для того и тренажёр.'; }
+
+  $('#screen-result').innerHTML=`
+    <div class="res-hero">
+      <div class="lab" style="color:var(--faint);font-size:12px;font-family:var(--mono)">${premature?'Сессия прервана':'Итог сессии'}</div>
+      <p class="big-score ${sessionScore<0?'neg':'pos'}">${sessionScore>=0?'+':''}${sessionScore}<small> ◆</small></p>
+      <h2 class="res-verdict">${verdict}</h2>
+      <p class="res-sub">${sub}</p>
+      ${leveledUp?`<div class="levelup">🎉 Новый уровень: <b>${levelOf(p.rating).name}</b> (ур. ${lvlNow})! ${levelOf(p.rating).tiers.length>levelOf(beforeRating).tiers.length?'Открылись более сложные вопросы.':''}</div>`:''}
+      ${leveledDown?`<div class="levelup" style="background:var(--red-bg);border-color:rgba(208,93,93,.4)">⬇ Уровень понизился до «<b>${levelOf(p.rating).name}</b>». Бывает — наверстаешь.</div>`:''}
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v">${right}/${answered}</div><div class="l">Верно</div></div>
+      <div class="stat"><div class="v">${acc}%</div><div class="l">Точность</div></div>
+      <div class="stat"><div class="v" style="color:${p.rating<0?'var(--red)':'inherit'}">${p.rating}</div><div class="l">Рейтинг ◆</div></div>
+      <div class="stat"><div class="v">${levelOf(p.rating).lvl}</div><div class="l">Уровень</div></div>
+    </div>
+    <div class="block" style="margin-top:6px"><h2 style="font-size:18px">Точность по темам</h2></div>
+    <div class="bars" id="rbars"></div>
+    ${weak.length?`<div class="weak has"><h3>📌 Повторить</h3><p>Точность ниже 60% — начни следующую тренировку с них.</p><div class="weak-list" id="rweak"></div></div>`
+      :`<div class="weak"><h3 style="color:var(--green)">🎯 Слабых тем нет</h3><p style="margin:0">В этой сессии всё ≥60%. Темы и уровень растут — так держать.</p></div>`}
+    <div class="q-actions" style="margin-top:22px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary" id="r-again">Ещё</button>
+      <button class="btn btn-ghost" id="r-prog">Прогресс</button>
+      <button class="btn btn-ghost" id="r-lb">Рейтинг</button>
+    </div>`;
+
+  const bars=$('#rbars');
+  if(!rows.length){ bars.innerHTML='<div class="empty" style="padding:20px">—</div>'; }
+  rows.forEach(t=>{ const top=TOPICS.find(x=>x.id===t.id); if(!top)return;
+    const col= t.pct>=80?'var(--green)':t.pct>=55?'var(--gold)':'var(--red)';
+    const row=document.createElement('div'); row.className='bar-row';
+    row.innerHTML=`<span class="name">${top.e} ${top.n}</span><span class="track"><span class="fill" style="width:0%;background:${col}"></span></span><span class="pct" style="color:${col}">${t.pct}%</span>`;
+    bars.appendChild(row); requestAnimationFrame(()=>row.querySelector('.fill').style.width=t.pct+'%'); });
+  if(weak.length){ const wl=$('#rweak'); weak.forEach(t=>{ const top=TOPICS.find(x=>x.id===t.id); const it=document.createElement('div'); it.className='weak-item';
+    it.innerHTML=`<span class="e">${top.e}</span><span><span class="nm">${top.n}</span><br><span class="why">${t.ok}/${t.seen} · ${t.pct}%</span></span><button class="go">Повторить →</button>`;
+    it.querySelector('.go').onclick=()=>{ state.setup.topics=new Set([t.id]); buildSetup(); nav('setup'); }; wl.appendChild(it); }); }
+
+  $('#r-again').onclick=()=>nav('setup');
+  $('#r-prog').onclick=()=>nav('progress');
+  $('#r-lb').onclick=()=>nav('leaderboard');
+}
+
+/* ============================================================
+   ПРОГРЕСС
+   ============================================================ */
+function renderProgress(){
+  const p=state.profile, lv=levelOf(p.rating), nx=nextLevel(p.rating);
+  const into=Math.max(0,p.rating-lv.min), span=Math.max(1,(nx?nx.min:lv.min)-lv.min);
+  const pct= nx?Math.min(100,Math.round(100*into/span)):100;
+  const keys=Object.keys(p.stats||{});
+  const seen=keys.reduce((a,k)=>a+p.stats[k].seen,0), corr=keys.reduce((a,k)=>a+p.stats[k].correct,0);
+  const acc=seen?Math.round(100*corr/seen):0;
+  const rows=keys.map(k=>({id:k,...p.stats[k],pct:Math.round(100*p.stats[k].correct/p.stats[k].seen)})).filter(r=>TOPICS.find(t=>t.id===r.id)).sort((a,b)=>a.pct-b.pct);
+  const weak=rows.filter(r=>r.pct<60);
+
+  $('#screen-progress').innerHTML=`
+    <div class="lvl-banner" style="margin-top:20px">
+      <div class="row"><div class="lvl-seal">${lv.seal}</div>
+        <div class="info"><div class="lab">Уровень ${lv.lvl} · ${p.rating} ◆</div><h3>${lv.name}</h3>
+          <div class="lvl-bar"><div class="fill" style="width:${pct}%"></div></div>
+          <div class="lvl-next">${nx?`до «${nx.name}» — ${nx.min-p.rating} ◆`:'максимум'}</div></div></div>
+    </div>
+    <div class="stats" style="margin-top:16px">
+      <div class="stat"><div class="v" style="color:${p.rating<0?'var(--red)':'inherit'}">${p.rating}</div><div class="l">Рейтинг ◆</div></div>
+      <div class="stat"><div class="v">${seen}</div><div class="l">Вопросов</div></div>
+      <div class="stat"><div class="v">${acc}%</div><div class="l">Точность</div></div>
+      <div class="stat"><div class="v">${(p.sessions||[]).length}</div><div class="l">Сессий</div></div>
+    </div>
+    <div class="block"><h2>Карта знаний</h2><p>Точность по институтам за всё время. Краснее — нужнее повторить.</p></div>
+    <div class="bars" id="pbars"></div>
+    ${weak.length?`<div class="weak has" style="margin-top:16px"><h3>📌 Повторить в первую очередь</h3><p>Накопленная точность ниже 60%.</p><div class="weak-list" id="pweak"></div></div>`:''}`;
+
+  const bars=$('#pbars');
+  if(!rows.length){ bars.innerHTML='<div class="empty"><div class="ic">📊</div>Пройди первую сессию — появится карта знаний.</div>'; }
+  rows.forEach(t=>{ const top=TOPICS.find(x=>x.id===t.id); const col=t.pct>=80?'var(--green)':t.pct>=55?'var(--gold)':'var(--red)';
+    const row=document.createElement('div'); row.className='bar-row';
+    row.innerHTML=`<span class="name">${top.e} ${top.n}</span><span class="track"><span class="fill" style="width:0%;background:${col}"></span></span><span class="pct" style="color:${col}">${t.pct}%</span>`;
+    bars.appendChild(row); requestAnimationFrame(()=>row.querySelector('.fill').style.width=t.pct+'%'); });
+  if(weak.length){ const wl=$('#pweak'); weak.forEach(t=>{ const top=TOPICS.find(x=>x.id===t.id); const it=document.createElement('div'); it.className='weak-item';
+    it.innerHTML=`<span class="e">${top.e}</span><span><span class="nm">${top.n}</span><br><span class="why">${t.correct}/${t.seen} · ${t.pct}%</span></span><button class="go">Тренировать →</button>`;
+    it.querySelector('.go').onclick=()=>{ state.setup.topics=new Set([t.id]); buildSetup(); nav('setup'); }; wl.appendChild(it); }); }
+}
+
+/* ============================================================
+   РЕЙТИНГ
+   ============================================================ */
+async function renderLeaderboard(){
+  const host=$('#lb-host'); host.innerHTML=`<div class="empty"><div class="ic">⏳</div>Загружаю…</div>`;
+  const note=$('#lb-note');
+  if(Store.mode==='supabase'){ note.innerHTML='🌍 <b>Общий рейтинг.</b> Все игроки со всех устройств. Имя, фамилия и баллы видны всем.'; }
+  else if(Store.mode==='cloud'){ note.innerHTML='Рейтинг общий в приложении Claude. На GitHub включи Supabase (см. README), иначе станет локальным.'; }
+  else { note.innerHTML='📵 <b>Локальный режим.</b> Видно только профили этого браузера. Для общего рейтинга настрой Supabase (README).'; }
+
+  let rows=await Store.lbTop(50);
+  if(!rows.length){ const idx=await loadIndex(); rows=idx.map(p=>({slug:p.slug,first:p.first,last:p.last,rating:p.rating})); }
+  rows.sort((a,b)=>b.rating-a.rating);
+  if(!rows.length){ host.innerHTML='<div class="empty"><div class="ic">🏆</div>Пока пусто. Пройди сессию и займи первое место.</div>'; return; }
+
+  const me=state.profile?.slug; host.innerHTML='';
+  const list=document.createElement('div'); list.className='lb-list';
+  rows.slice(0,50).forEach((r,ix)=>{ const lv=levelOf(r.rating);
+    const row=document.createElement('div'); row.className='lb-row'+(r.slug===me?' me':'');
+    const medal= ix===0?'🥇':ix===1?'🥈':ix===2?'🥉':(ix+1);
+    row.innerHTML=`<span class="rk">${medal}</span><span class="av">${initials(r.first,r.last)}</span>
+      <span class="nm"><b>${r.first} ${r.last||''}${r.slug===me?' · ты':''}</b><span>${lv.seal} ${lv.name}</span></span>
+      <span class="rt"><b style="color:${r.rating<0?'var(--red)':'var(--gold)'}">${r.rating}</b><span>◆</span></span>`;
+    list.appendChild(row); });
+  host.appendChild(list);
+}
+
+init();
+
+</script>
+</body>
+</html>
