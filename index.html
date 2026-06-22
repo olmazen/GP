@@ -306,6 +306,32 @@ header.top{position:sticky;top:0;z-index:30;background:rgba(20,22,27,.92);backdr
 .upd-x:hover{color:var(--text)}
 #sub-flash{position:fixed;inset:0;z-index:300;background-position:center;background-size:cover;background-repeat:no-repeat;background-color:#000;opacity:0;display:none;pointer-events:none}
 
+/* инфографика роста */
+.chart-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px 8px}
+.chart-empty{color:var(--faint);font-size:13px;text-align:center;padding:24px 10px}
+
+/* сообщение на входе */
+.gate-msg{min-height:0;font-size:12.5px;color:var(--red);margin-top:10px;line-height:1.4}
+.gate-msg:empty{display:none}
+
+/* кликабельные строки рейтинга */
+.lb-row.clickable{cursor:pointer;transition:.13s}
+.lb-row.clickable:hover{border-color:var(--gold);transform:translateY(-1px)}
+.lb-arrow{flex:0 0 auto;color:var(--faint);font-size:20px;margin-left:2px}
+
+/* просмотр профиля */
+.pv-back{display:inline-block;margin:20px 0 14px;font-size:13px;color:var(--gold);font-weight:600;cursor:pointer}
+.pv-back:hover{text-decoration:underline}
+.pv-head{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.pv-av{width:56px;height:56px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-weight:700;font-size:22px;color:#211a08;background:var(--gold)}
+.pv-info{flex:1;min-width:0}
+.pv-info h2{font-family:var(--serif);font-size:20px;margin:0 0 2px;line-height:1.15}
+.pv-sub{font-size:13px;color:var(--gold)}
+.pv-reg{font-size:11.5px;color:var(--faint);margin-top:3px}
+.pv-rating{text-align:right;flex:0 0 auto;font-family:var(--mono)}
+.pv-rating b{font-size:22px;display:block}
+.pv-rating span{font-size:11px;color:var(--faint)}
+
 /* ПАСХАЛКА */
 .egg-overlay{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;
   background:radial-gradient(circle at 50% 42%, rgba(80,26,0,.9), rgba(0,0,0,.95))}
@@ -354,6 +380,7 @@ header.top{position:sticky;top:0;z-index:30;background:rgba(20,22,27,.92);backdr
       <div class="field"><label>Фамилия</label><input id="in-last" placeholder="Цивилистов" maxlength="24" autocomplete="family-name"></div>
     </div>
     <button class="btn btn-primary" style="width:100%" id="btn-enter">Начать</button>
+    <div class="gate-msg" id="gate-msg"></div>
     <div class="small">Браузер запомнит тебя — в следующий раз войдёшь сразу.</div>
     <div class="returning" id="returning" style="display:none">
       <h4>Продолжить как</h4>
@@ -419,6 +446,9 @@ header.top{position:sticky;top:0;z-index:30;background:rgba(20,22,27,.92);backdr
   <!-- ПРОГРЕСС -->
   <section id="screen-progress" class="screen"></section>
 
+  <!-- ПРОФИЛЬ ИГРОКА -->
+  <section id="screen-pview" class="screen"></section>
+
   <!-- РЕЙТИНГ -->
   <section id="screen-leaderboard" class="screen">
     <div class="block" style="margin-top:20px"><h2>Рейтинг</h2><p>Кто сколько набрал.</p></div>
@@ -475,17 +505,34 @@ const Store = (() => {
      Authorization шлюз Supabase подставит сам. Работает и со старым anon-ключом. */
   const sb=(p,o={})=>fetch(SUPABASE_URL+'/rest/v1/'+p,{...o,headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json',...(o.headers||{})}});
   async function lbPush(slug,obj){
-    if(supaOn){ try{ const r=await sb('players',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{slug,first:obj.first,last:obj.last,rating:obj.rating}])}); if(r.ok)return; }catch(e){} }
-    await set('lb:'+slug, JSON.stringify({first:obj.first,last:obj.last,rating:obj.rating,ts:Date.now()}), true);
+    if(supaOn){ try{
+        const row={slug,first:obj.first,last:obj.last,rating:obj.rating};
+        if(obj.stats!==undefined) row.stats=obj.stats;
+        if(obj.created_at) row.created_at=obj.created_at;
+        const r=await sb('players',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([row])}); if(r.ok)return;
+      }catch(e){} }
+    await set('lb:'+slug, JSON.stringify({first:obj.first,last:obj.last,rating:obj.rating,stats:obj.stats,created_at:obj.created_at,ts:Date.now()}), true);
   }
   async function lbTop(limit=50){
-    if(supaOn){ try{ const r=await sb('players?select=slug,first,last,rating&order=rating.desc&limit='+limit); if(r.ok)return await r.json(); }catch(e){} }
+    if(supaOn){ try{ const r=await sb('players?select=slug,first,last,rating,created_at&order=rating.desc&limit='+limit); if(r.ok)return await r.json(); }catch(e){} }
     const keys=await list('lb:',true); const rows=[];
     for(const k of keys){ const raw=await get(k,true); if(!raw)continue; try{ rows.push({slug:k.slice(3),...JSON.parse(raw)}); }catch(e){} }
     rows.sort((a,b)=>b.rating-a.rating); return rows;
   }
+  async function lbGet(slug){
+    if(supaOn){ try{ const r=await sb('players?slug=eq.'+encodeURIComponent(slug)+'&select=*'); if(r.ok){ const a=await r.json(); return a[0]||null; } }catch(e){} }
+    const raw=await get('lb:'+slug,true); if(raw){ try{ return {slug,...JSON.parse(raw)}; }catch(e){} }
+    return null;
+  }
+  async function lbFindByName(first,last){
+    if(supaOn){ try{
+        const q='players?select=slug,first,last&first=ilike.'+encodeURIComponent(first)+'&last=ilike.'+encodeURIComponent(last||'');
+        const r=await sb(q); if(r.ok){ const a=await r.json(); return a[0]||null; }
+      }catch(e){} }
+    return null;
+  }
   const mode = supaOn?'supabase':(hasWS?'cloud':'local');
-  return { get, set, list, lbPush, lbTop, mode };
+  return { get, set, list, lbPush, lbTop, lbGet, lbFindByName, mode };
 })();
 </script>
 <script>
@@ -1646,7 +1693,7 @@ async function saveProfile(p){
   if(i>=0) idx[i]=e; else idx.push(e);
   idx.sort((a,b)=>b.rating-a.rating);
   await saveIndex(idx);
-  await Store.lbPush(p.slug,{first:p.first,last:p.last,rating:p.rating});
+  await Store.lbPush(p.slug,{first:p.first,last:p.last,rating:p.rating,stats:p.stats,created_at:new Date(p.createdAt||Date.now()).toISOString()});
 }
 function newProfile(f,l){ return {slug:slugify(f,l),first:f,last:l||'',rating:0,stats:{},sessions:[],v:SCHEMA_VERSION,createdAt:Date.now()}; }
 
@@ -1684,11 +1731,27 @@ async function init(){
 }
 async function doEnter(){
   const f=$('#in-first').value.trim(), l=$('#in-last').value.trim();
+  const msg=$('#gate-msg'); if(msg) msg.textContent='';
   if(!f){ $('#in-first').focus(); toast('Введите имя'); return; }
-  const p=newProfile(f,l); state.profile=p;
-  await Store.set('active',p.slug);
-  await saveProfile(p);
-  afterLogin();
+  const norm=s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+  const btn=$('#btn-enter'); if(btn){ btn.disabled=true; btn.textContent='Проверяю…'; }
+  try{
+    // 1) тот же игрок уже есть локально → просто входим как он (без дубля)
+    const idx=await loadIndex();
+    const localSame=idx.find(p=>norm(p.first)===norm(f)&&norm(p.last)===norm(l));
+    if(localSame){ await enterAs(localSame.slug); return; }
+    // 2) имя занято кем-то ещё в общем рейтинге → запрет
+    const taken=await Store.lbFindByName(f,l);
+    if(taken){
+      if(msg) msg.textContent='Имя «'+f+(l?' '+l:'')+'» уже занято. Добавь фамилию или измени её.';
+      toast('Это имя уже занято'); return;
+    }
+    // 3) создаём новый профиль
+    const p=newProfile(f,l); state.profile=p;
+    await Store.set('active',p.slug);
+    await saveProfile(p);
+    afterLogin();
+  } finally { if(btn){ btn.disabled=false; btn.textContent='Начать'; } }
 }
 async function enterAs(slug){
   const p=await loadProfile(slug); if(!p){ toast('Профиль не найден'); return; }
@@ -1712,7 +1775,7 @@ function refreshChip(){
    ============================================================ */
 function nav(name){
   $$('.screen').forEach(s=>s.classList.remove('active'));
-  const map={setup:'screen-setup',quiz:'screen-quiz',result:'screen-result',progress:'screen-progress',leaderboard:'screen-leaderboard',map:'screen-map'};
+  const map={setup:'screen-setup',quiz:'screen-quiz',result:'screen-result',progress:'screen-progress',leaderboard:'screen-leaderboard',map:'screen-map',pview:'screen-pview'};
   $('#'+map[name]).classList.add('active');
   $$('.top nav button').forEach(b=>b.classList.toggle('on', b.dataset.nav===name));
   if(name==='leaderboard') renderLeaderboard();
@@ -2099,6 +2162,8 @@ function renderProgress(){
       <div class="stat"><div class="v">${acc}%</div><div class="l">Точность</div></div>
       <div class="stat"><div class="v">${(p.sessions||[]).length}</div><div class="l">Сессий</div></div>
     </div>
+    <div class="block"><h2>📈 Рост уровня</h2><p>Как поднимался твой рейтинг от сессии к сессии. Пунктир — пороги уровней; точка — где ты сейчас.</p></div>
+    <div class="chart-card">${ratingChartSVG(p.sessions||[])}</div>
     <div class="block"><h2>Карта знаний</h2><p>Точность по институтам за всё время. Краснее — нужнее повторить.</p></div>
     <div class="bars" id="pbars"></div>
     ${weak.length?`<div class="weak has" style="margin-top:16px"><h3>📌 Повторить в первую очередь</h3><p>Накопленная точность ниже 60%.</p><div class="weak-list" id="pweak"></div></div>`:''}`;
@@ -2132,11 +2197,13 @@ async function renderLeaderboard(){
   const me=state.profile?.slug; host.innerHTML='';
   const list=document.createElement('div'); list.className='lb-list';
   rows.slice(0,50).forEach((r,ix)=>{ const lv=levelOf(r.rating);
-    const row=document.createElement('div'); row.className='lb-row'+(r.slug===me?' me':'');
+    const row=document.createElement('div'); row.className='lb-row clickable'+(r.slug===me?' me':'');
     const medal= ix===0?'🥇':ix===1?'🥈':ix===2?'🥉':(ix+1);
     row.innerHTML=`<span class="rk">${medal}</span><span class="av">${initials(r.first,r.last)}</span>
       <span class="nm"><b>${r.first} ${r.last||''}${r.slug===me?' · ты':''}</b><span>${lv.seal} ${lv.name}</span></span>
-      <span class="rt"><b style="color:${r.rating<0?'var(--red)':'var(--gold)'}">${r.rating}</b><span>◆</span></span>`;
+      <span class="rt"><b style="color:${r.rating<0?'var(--red)':'var(--gold)'}">${r.rating}</b><span>◆</span></span>
+      <span class="lb-arrow">›</span>`;
+    row.onclick=()=>openProfile(r.slug);
     list.appendChild(row); });
   host.appendChild(list);
 }
@@ -2252,6 +2319,94 @@ function startSubliminal(){
   };
   // каждые 5 минут, с небольшим разбросом — чтобы было «иногда»
   subTimer=setInterval(()=>{ setTimeout(flash, Math.random()*40000); }, 5*60*1000);
+}
+
+/* ============================================================
+   ИНФОГРАФИКА РОСТА УРОВНЯ
+   ============================================================ */
+function ratingChartSVG(sessions){
+  const pts=[0]; let cum=0;
+  (sessions||[]).forEach(s=>{ cum+=(s.score||0); pts.push(cum); });
+  if(pts.length<2) return '<div class="chart-empty">Сыграй пару сессий — здесь появится график роста уровня.</div>';
+  const data=pts.slice(-24);
+  const W=320,H=150,padL=8,padR=24,padT=12,padB=14;
+  const maxV=Math.max(...data,0), minV=Math.min(...data,0);
+  const nx=nextLevel(cum);
+  const top=(Math.max(maxV, nx?nx.min:maxV)*1.08)||100;
+  const bot=Math.min(minV,0);
+  const range=Math.max(1, top-bot);
+  const X=i=>padL+i*((W-padL-padR)/(data.length-1));
+  const Y=v=>padT+(1-(v-bot)/range)*(H-padT-padB);
+  let bands='';
+  PLAYER_LEVELS.forEach(L=>{ if(L.min>bot && L.min<top && L.min>0){ const yy=Y(L.min).toFixed(1);
+    bands+=`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="var(--line)" stroke-dasharray="3 3"/>`+
+           `<text x="${W-padR+2}" y="${(+yy+3)}" font-size="7.5" fill="var(--faint)">ур.${L.lvl}</text>`; } });
+  const yz=Y(0).toFixed(1);
+  const line=data.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+  const area=`M${X(0).toFixed(1)} ${yz} `+data.map((v,i)=>`L${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ')+` L${X(data.length-1).toFixed(1)} ${yz} Z`;
+  const lx=X(data.length-1).toFixed(1), ly=Y(data[data.length-1]).toFixed(1);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+    <defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--gold)" stop-opacity="0.35"/><stop offset="1" stop-color="var(--gold)" stop-opacity="0"/></linearGradient></defs>
+    ${bands}
+    <line x1="${padL}" y1="${yz}" x2="${W-padR}" y2="${yz}" stroke="var(--line-2)"/>
+    <path d="${area}" fill="url(#rg)"/>
+    <path d="${line}" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${lx}" cy="${ly}" r="3.6" fill="var(--gold)" stroke="var(--bg)" stroke-width="1.5"/>
+  </svg>`;
+}
+
+/* ============================================================
+   ПРОСМОТР ПРОФИЛЯ ДРУГОГО ИГРОКА
+   ============================================================ */
+async function openProfile(slug){
+  nav('pview');
+  const host=$('#screen-pview'); host.innerHTML='<div class="empty"><div class="ic">⏳</div>Загружаю профиль…</div>';
+  let data=null;
+  const local=await loadProfile(slug);
+  if(local){ data={slug,first:local.first,last:local.last,rating:local.rating,stats:local.stats||{},created_at:new Date(local.createdAt||Date.now()).toISOString(),_self:slug===state.profile.slug}; }
+  else { const row=await Store.lbGet(slug); if(row){ let st=row.stats; if(typeof st==='string'){ try{st=JSON.parse(st);}catch(e){st={};} } data={slug,first:row.first,last:row.last,rating:row.rating||0,stats:st||{},created_at:row.created_at}; } }
+  if(!data){ host.innerHTML='<div class="empty"><div class="ic">🙈</div>Профиль недоступен.</div>'; const b=document.createElement('div'); b.className='pv-back'; b.textContent='← к рейтингу'; b.onclick=()=>nav('leaderboard'); host.prepend(b); return; }
+  renderProfileView(data);
+}
+function renderProfileView(d){
+  const lv=levelOf(d.rating||0);
+  const keys=Object.keys(d.stats||{}).filter(k=>TOPICS.find(t=>t.id===k));
+  const seen=keys.reduce((a,k)=>a+(d.stats[k].seen||0),0);
+  const corr=keys.reduce((a,k)=>a+(d.stats[k].correct||0),0);
+  const acc=seen?Math.round(100*corr/seen):0;
+  const rows=keys.map(k=>({id:k,...d.stats[k],pct:Math.round(100*d.stats[k].correct/d.stats[k].seen)})).sort((a,b)=>a.pct-b.pct);
+  const weak=rows.filter(r=>r.pct<60);
+  const reg=d.created_at?new Date(d.created_at).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}):'—';
+  const host=$('#screen-pview');
+  host.innerHTML=`
+    <div class="pv-back" id="pv-back">← к рейтингу</div>
+    <div class="pv-head">
+      <div class="pv-av">${initials(d.first,d.last)}</div>
+      <div class="pv-info">
+        <h2>${d.first} ${d.last||''}${d._self?' · это ты':''}</h2>
+        <div class="pv-sub">${lv.seal} ${lv.name} · ур. ${lv.lvl}</div>
+        <div class="pv-reg">в академии с ${reg}</div>
+      </div>
+      <div class="pv-rating"><b style="color:${(d.rating||0)<0?'var(--red)':'var(--gold)'}">${d.rating||0}</b><span>◆</span></div>
+    </div>
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><div class="v">${acc}%</div><div class="l">Точность</div></div>
+      <div class="stat"><div class="v">${seen}</div><div class="l">Вопросов</div></div>
+      <div class="stat"><div class="v">${rows.length}</div><div class="l">Тем</div></div>
+      <div class="stat"><div class="v">${lv.lvl}</div><div class="l">Уровень</div></div>
+    </div>
+    ${rows.length?`<div class="block"><h2 style="font-size:18px">Как решает по темам</h2></div><div class="bars" id="pv-bars"></div>`
+      :`<div class="empty" style="padding:24px"><div class="ic">📊</div>У этого игрока пока нет данных по темам.</div>`}
+    ${weak.length?`<div class="weak has" style="margin-top:16px"><h3>📌 Где ошибается</h3><p>Темы с точностью ниже 60%.</p><div class="weak-list" id="pv-weak"></div></div>`:''}`;
+  $('#pv-back').onclick=()=>nav('leaderboard');
+  if(rows.length){ const bars=$('#pv-bars'); rows.forEach(t=>{ const top=TOPICS.find(x=>x.id===t.id); const col=t.pct>=80?'var(--green)':t.pct>=55?'var(--gold)':'var(--red)';
+    const row=document.createElement('div'); row.className='bar-row';
+    row.innerHTML=`<span class="name">${top.e} ${top.n}</span><span class="track"><span class="fill" style="width:0%;background:${col}"></span></span><span class="pct" style="color:${col}">${t.pct}%</span>`;
+    bars.appendChild(row); requestAnimationFrame(()=>row.querySelector('.fill').style.width=t.pct+'%'); }); }
+  if(weak.length){ const wl=$('#pv-weak'); weak.forEach(t=>{ const top=TOPICS.find(x=>x.id===t.id); const it=document.createElement('div'); it.className='weak-item';
+    it.innerHTML=`<span class="e">${top.e}</span><span><span class="nm">${top.n}</span><br><span class="why">${t.correct}/${t.seen} верно · ${t.pct}%</span></span>`;
+    wl.appendChild(it); }); }
 }
 
 init();
